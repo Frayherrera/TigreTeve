@@ -8,10 +8,10 @@ use App\Models\Noticia;
 
 
 Route::get('/dashboard', [NoticiaController::class, 'index'])->name('noticias.index');
-// Route::get('/', [NoticiaController::class, 'p'])->name('noticias.home');
+Route::get('/', [NoticiaController::class, 'p'])->name('noticias.home');
 Route::get('/noticia/{id}', [NoticiaController::class, 'show'])->name('news.show');
-Route::get('/', function () {
-    return view('welcome');
+Route::get('/vista', function(){
+    return view('noticias.show');
 });
 
 Route::get('/dashboard', function () {
