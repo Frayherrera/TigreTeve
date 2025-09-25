@@ -35,6 +35,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::table('noticias', function (Blueprint $table) {
+            $table->dropForeign(['user_id']); // quitar la FK primero
+        });
+
         Schema::dropIfExists('noticias');
     }
 };
