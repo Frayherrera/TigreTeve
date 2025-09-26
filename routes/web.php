@@ -11,7 +11,7 @@ Route::get('/dashboard', [NoticiaController::class, 'index'])->name('noticias.in
 // Route::get('/', [NoticiaController::class, 'p'])->name('noticias.home');
 Route::get('/noticia/{id}', [NoticiaController::class, 'show'])->name('news.show');
 Route::get('/', function(){
-    return view('principal');
+    return view('welcome');
 });
 
 Route::get('/dashboard', function () {
