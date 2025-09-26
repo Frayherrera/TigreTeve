@@ -3,7 +3,6 @@
 
 <head>
     <meta charset="UTF-8">
-    @vite(['resources/css/home.css', 'resources/js/app.js','resources/css/app.css' ])
     <title>@yield('title', 'Tigre teve')</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/home.css">
