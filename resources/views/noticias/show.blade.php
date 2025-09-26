@@ -3,6 +3,7 @@
 @section('title', 'Inicio')
 
 @section('content')
+    <script src="https://cdn.tailwindcss.com"></script>
 
 
     <div class="container mx-auto py-8 max-w-4xl px-4 sm:px-6">
