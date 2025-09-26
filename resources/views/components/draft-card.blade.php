@@ -18,7 +18,9 @@
 
         <!-- Texto principal -->
         <div class="ml-4 flex-1">
-            <div class="font-semibold text-gray-800">{{ $titulo }}</div>
+            <div class="font-semibold text-gray-800">
+                {{ implode(' ', array_slice(explode(' ', $titulo), 0, 2)) }}
+            </div>
             <div class="text-sm text-gray-500">
                 <span class="text-orange-500">{{ $estado }}</span> • {{ $fecha }}
             </div>
