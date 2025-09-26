@@ -50,10 +50,7 @@
                 <div>
                     <label class="block text-sm font-medium">Fecha/Hora de publicación (si programada)</label>
                     <input type="datetime-local" name="publicado_en"
-                        value="{{ old(
-                            'publicado_en',
-                            optional($n->publicado_en ?? null)->format('Y-md\TH:i'),
-                        ) }}"
+                        value="{{ old('publicado_en', $n->publicado_en?->format('Y-m-d\TH:i')) }}"
                         class="border rounded-xl px-3 py-2">
                 </div>
                 <div>

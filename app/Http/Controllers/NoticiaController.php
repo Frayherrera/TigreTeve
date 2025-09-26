@@ -87,7 +87,7 @@ class NoticiaController extends Controller
         $noticia = Noticia::where('slug', $slug)->firstOrFail();
 
         abort_unless(
-            $noticia->estado === 'publicada' || optional($noticia->publicado_en) <= now(),
+            $noticia->estado === 'publicada' || $noticia->publicado_en <= now(),
             404
         );
 

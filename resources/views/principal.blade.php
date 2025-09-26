@@ -1,8 +1,9 @@
-    @extends('layouts.home')
+@extends('layouts.home')
 
 @section('title', 'Inicio')
 
 @section('content')
+
     <section class="hero">
         <div class="container">
             <div class="hero-content">
