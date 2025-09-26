@@ -22,7 +22,7 @@ class NoticiaController extends Controller
         $noticias = Noticia::NoD()->get();
         $categorias = Categoria::all();
         $noticiasDestacadas = Noticia::destacadas()->get();
-        return view('welcome', compact('noticias','categorias' ,'noticiasDestacadas'));
+        return view('principal', compact('noticias','categorias' ,'noticiasDestacadas'));
     }
 
     public function index(Request $request)
