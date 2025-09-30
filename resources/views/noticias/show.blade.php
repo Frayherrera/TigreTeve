@@ -11,7 +11,8 @@
             {{-- Portada --}}
             @if ($noticia->portada_path)
                 <div class="relative overflow-hidden">
-                    <img src="{{ asset('storage/' . $noticia->portada_path) }}" alt="Portada"
+                    
+                    <img src="{{ Storage::disk('s3')->url($noticia->portada_path) }}" alt="Portada"
                         class="w-full object-cover transition-transform duration-500 hover:scale-105 foto-fija">
                     <div class="absolute top-4 right-4">
                         @if ($noticia->estado == 'publicado')

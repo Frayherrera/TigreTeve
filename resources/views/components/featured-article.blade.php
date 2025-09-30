@@ -1,9 +1,7 @@
 <article class="featured-article">
-    <img src="{{ $noticia->portada_path 
-        ? asset('storage/'.$noticia->portada_path) 
-        : 'https://via.placeholder.com/1000x600?text=Sin+Imagen' }}" 
-        alt="{{ $noticia->titulo }}">
-    
+    @if ($noticia->portada_path)
+        <img src="{{ Storage::disk('s3')->url($noticia->portada_path) }}" alt="{{ $noticia->titulo }}">
+    @endif
     <div class="article-content">
         <div class="article-meta">
             <span class="category-badge">{{ $noticia->categoria->nombre ?? 'Sin categoría' }}</span>

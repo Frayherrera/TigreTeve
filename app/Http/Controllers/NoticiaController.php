@@ -22,7 +22,7 @@ class NoticiaController extends Controller
         $noticias = Noticia::NoD()->get();
         $categorias = Categoria::all();
         $noticiasDestacadas = Noticia::destacadas()->get();
-        return view('principal', compact('noticias','categorias' ,'noticiasDestacadas'));
+        return view('principal', compact('noticias', 'categorias', 'noticiasDestacadas'));
     }
 
     public function index(Request $request)
@@ -66,6 +66,7 @@ class NoticiaController extends Controller
     }
     public function store(StoreNoticiaRequest $request)
     {
+        $folder = "imagenes";
         $data = $request->validated();
 
         $data['is_featured'] = $request->has('is_featured'); // ✅ Captura si el checkbox está marcado
@@ -73,7 +74,9 @@ class NoticiaController extends Controller
         $data['slug'] = $data['slug'] ?? Str::slug($data['titulo']) . '-' . Str::random(6);
 
         if ($request->hasFile('portada')) {
-            $data['portada_path'] = $request->file('portada')->store('portadas', 'public');
+            $file = $request->file('portada');
+            $route = Storage::disk('s3')->put('imagenes', $file);
+            $data['portada_path'] = $route;
         }
 
         $noticia = Noticia::create($data);
@@ -93,7 +96,7 @@ class NoticiaController extends Controller
 
         $noticia->increment('vistas');
 
-        return view('noticias.show', compact('noticia','categorias'));
+        return view('noticias.show', compact('noticia', 'categorias'));
     }
     public function edit(Noticia $noticia)
     {
@@ -114,7 +117,12 @@ class NoticiaController extends Controller
 
         // Actualizar portada si suben otra
         if ($request->hasFile('portada')) {
-            $data['portada_path'] = $request->file('portada')->store('portadas', 'public');
+            if ($noticia->portada_path) {
+                Storage::disk('s3')->delete($noticia->portada_path);
+            }
+            $file = $request->file('portada');
+            $route = Storage::disk('s3')->put('imagenes', $file);
+            $data['portada_path'] = $route;
         }
 
         $noticia->update($data);
@@ -127,6 +135,9 @@ class NoticiaController extends Controller
 
     public function destroy(Noticia $noticia)
     {
+        if ($noticia->portada_path) {
+            Storage::disk('s3')->delete($noticia->portada_path);
+        }
         $this->authorize('eliminar noticias');
         $noticia->delete();
         return redirect()->route('noticias.index')->with('ok', 'Noticia eliminada con éxito');

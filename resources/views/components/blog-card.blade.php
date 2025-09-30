@@ -9,12 +9,12 @@
 ])
 
 <article class="blog-card" onclick="window.location='{{ route('noticias.show', $noticia->slug) }}'">
-    <img src="{{ $noticia->portada_path
-        ? asset('storage/' . $noticia->portada_path)
-        : 'https://via.placeholder.com/1000x600?text=Sin+Imagen' }}"
+    @if ($noticia->portada_path)
+    <img src="{{ Storage::disk('s3')->url($noticia->portada_path) }}"
         alt="{{ $noticia->titulo }}">
+    @endif
     <div class="blog-card-content">
-        <span class="category-badge" style="background: {{ $color }};">{{ $noticia->categoria->nombre }}</span>
+        <span class="category-badge" style="background: {{ $color }};">{{ $noticia->categoria->nombre ?? "sin categoria" }}</span>
         <h3>{{ $noticia->titulo }}</h3>
         <p>{{ $noticia->resumen }}</p>
         <div class="blog-meta">
