@@ -24,10 +24,7 @@ class NoticiaController extends Controller
         // Si no paso slug, no busco categoría
         if ($slug) {
             $categoria = Categoria::where('slug', $slug)->first();
-            if (! $categoria) {
-                return view('auth.login');
-            }
-
+            
             $noticias = Noticia::with(['categoria'])
                 ->where('category_id', $categoria->id)
                 ->NoD()
@@ -65,19 +62,19 @@ class NoticiaController extends Controller
     }
 
 
-    public function porCategoria($slug)
-    {
-        $categorias = Categoria::all();
-        $categoria = Categoria::where('slug', $slug)->firstOrFail();
-        $noticiasDestacadas = Noticia::destacadas()->get();
-        $noticias2 = Noticia::with(['categoria'])
-            ->where('category_id', $categoria->id)
-            ->publicadas()
-            ->latest()
-            ->paginate(10);
+    // public function porCategoria($slug)
+    // {
+    //     $categorias = Categoria::all();
+    //     $categoria = Categoria::where('slug', $slug)->firstOrFail();
+    //     $noticiasDestacadas = Noticia::destacadas()->get();
+    //     $noticias2 = Noticia::with(['categoria'])
+    //         ->where('category_id', $categoria->id)
+    //         ->publicadas()
+    //         ->latest()
+    //         ->paginate(10);
 
-        return view('principal', compact('noticias2', 'categoria', 'noticiasDestacadas', 'categorias'));
-    }
+    //     return view('principal', compact('noticias2', 'categoria', 'noticiasDestacadas', 'categorias'));
+    // }
     public function index(Request $request)
     {
         $filtro = $request->get('estado'); // puede ser 'publicadas', 'borradores', 'programadas'
