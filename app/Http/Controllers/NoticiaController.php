@@ -25,7 +25,7 @@ class NoticiaController extends Controller
         if ($slug) {
             $categoria = Categoria::where('slug', $slug)->first();
             if (! $categoria) {
-                abort(404); // opcional
+                return view('auth.login');
             }
 
             $noticias = Noticia::with(['categoria'])
@@ -124,6 +124,9 @@ class NoticiaController extends Controller
         $noticia->tags()->sync($request->input('tags', []));
 
         return redirect()->route('noticias.index')->with('ok', 'Noticia creada');
+    }
+    public function iniciar(){
+        return view('welcome');
     }
     public function show($slug)
     {
