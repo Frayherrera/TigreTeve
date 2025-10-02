@@ -14,29 +14,37 @@
         </div>
     </section>
 
+
+
+
     <main class="main-content">
         <div class="container">
             <div class="content-grid">
                 <!-- Main Content -->
                 <div class="main-articles">
                     <!-- Featured Article -->
-                    @foreach ($noticiasDestacadas as $noticia)
+                    @forelse ($noticiasDestacadas as $noticia)
                         <x-featured-article :noticia="$noticia" />
-                    @endforeach
+                        @empty
+                        <h2>No hay noticias destacadas en esta categoria</h2>
+                            
+                    @endforelse
 
                     <!-- Blog Grid -->
-                    <div class="blog-grid">
+                    <div class="blog-grid" id="noticias-container">
                         @foreach ($noticias as $noticia)
                             <x-blog-card :noticia="$noticia" />
                         @endforeach
                     </div>
+
+
                 </div>
 
                 <!-- Sidebar -->
                 <aside class="sidebar">
                     <!-- Trending Articles -->
                     <div class="sidebar-widget">
-                        <h3 class="widget-title"><i class="fas fa-fire"></i> Trending</h3>
+                        <h3 class="widget-title"><i class="fas fa-fire"></i> Tendencia</h3>
                         <div class="trending-item">
                             <img src="https://images.unsplash.com/photo-1495020689067-958852a7765e?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80"
                                 alt="Trending">
@@ -63,31 +71,6 @@
                         </div>
                     </div>
 
-                    <!-- Categories -->
-                    <div class="sidebar-widget">
-                        <h3 class="widget-title"><i class="fas fa-tags"></i> Categorías</h3>
-                        <div class="categories-list">
-                            <a href="#" class="category-tag">Política (45)</a>
-                            <a href="#" class="category-tag">Deportes (32)</a>
-                            <a href="#" class="category-tag">Economía (28)</a>
-                            <a href="#" class="category-tag">Tecnología (24)</a>
-                            <a href="#" class="category-tag">Cultura (19)</a>
-                            <a href="#" class="category-tag">Internacional (15)</a>
-                            <a href="#" class="category-tag">Salud (12)</a>
-                        </div>
-                    </div>
-
-                    <!-- Newsletter -->
-                    <div class="sidebar-widget">
-                        <h3 class="widget-title"><i class="fas fa-envelope"></i> Newsletter</h3>
-                        <p>Recibe las mejores noticias directamente en tu correo electrónico.</p>
-                        <form class="newsletter-form">
-                            <input type="email" placeholder="Tu correo electrónico" required>
-                            <button type="submit" class="newsletter-btn">
-                                <i class="fas fa-paper-plane"></i> Suscribirse
-                            </button>
-                        </form>
-                    </div>
 
                     <!-- Weather Widget -->
                     <div class="sidebar-widget">
@@ -108,4 +91,8 @@
             </div>
         </div>
     </main>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+
 @endsection

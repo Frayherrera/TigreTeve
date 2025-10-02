@@ -16,15 +16,68 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 class NoticiaController extends Controller
 {
     use AuthorizesRequests;
-
-    public function p()
+    public function p(Request $request, $slug = null)
     {
-        $noticias = Noticia::NoD()->get();
+        $term = $request->input('q');
         $categorias = Categoria::all();
-        $noticiasDestacadas = Noticia::destacadas()->get();
-        return view('principal', compact('noticias', 'categorias', 'noticiasDestacadas'));
+
+        // Si no paso slug, no busco categoría
+        if ($slug) {
+            $categoria = Categoria::where('slug', $slug)->first();
+            if (! $categoria) {
+                abort(404); // opcional
+            }
+
+            $noticias = Noticia::with(['categoria'])
+                ->where('category_id', $categoria->id)
+                ->NoD()
+                ->publicadas()
+                ->buscar($term)
+                ->latest()
+                ->get();
+
+            $noticiasDestacadas = Noticia::with(['categoria'])
+                ->where('category_id', $categoria->id)
+                ->publicadas()
+                ->destacadas()
+                ->buscar($term)
+                ->latest()
+                ->get();
+        } else {
+            // si no paso slug, traigo todo
+            $noticias = Noticia::with(['categoria'])
+                ->NoD()
+                ->publicadas()
+                ->buscar($term)
+                ->latest()
+                ->get();
+            $noticiasDestacadas = Noticia::with(['categoria'])
+                ->publicadas()
+                ->destacadas()
+                ->buscar($term)
+                ->latest()
+                ->get();
+
+            $categoria = null; // para la vista
+        }
+
+        return view('principal', compact('noticias', 'categorias', 'noticiasDestacadas', 'categoria'));
     }
 
+
+    public function porCategoria($slug)
+    {
+        $categorias = Categoria::all();
+        $categoria = Categoria::where('slug', $slug)->firstOrFail();
+        $noticiasDestacadas = Noticia::destacadas()->get();
+        $noticias2 = Noticia::with(['categoria'])
+            ->where('category_id', $categoria->id)
+            ->publicadas()
+            ->latest()
+            ->paginate(10);
+
+        return view('principal', compact('noticias2', 'categoria', 'noticiasDestacadas', 'categorias'));
+    }
     public function index(Request $request)
     {
         $filtro = $request->get('estado'); // puede ser 'publicadas', 'borradores', 'programadas'
@@ -44,18 +97,6 @@ class NoticiaController extends Controller
         return view('panel.dashboard', compact('noticias', 'filtro'));
     }
 
-
-    // public function index(Request $request)
-    // {
-    //     $q = Noticia::with(['autor', 'categoria', 'tags'])->when($request->filled('q'), fn($qq) => $qq->buscar($request->q))->when($request->filled('categoria'), fn($qq) => $qq
-    //         ->whereHas('categoria', fn($c) => $c->where('slug', $request->categoria)))->when($request->filled('tag'), fn($qq) => $qq->whereHas(
-    //         'tags',
-    //         fn($t) => $t->where('slug', $request->tag)
-    //     ))->publicadas()->latest('publicado_en')->paginate(12)->withQueryString();
-    //     $categorias = Categoria::orderBy('nombre')->get(['id', 'nombre', 'slug']);
-    //     $tags = Tag::orderBy('nombre')->get(['id', 'nombre', 'slug']);
-    //     return view('noticias.index', compact('q', 'categorias', 'tags'));
-    // }
     public function create()
     {
         $this->authorize('crear noticias');
@@ -130,7 +171,7 @@ class NoticiaController extends Controller
         // Sincronizar tags
         $noticia->tags()->sync($request->input('tags', []));
 
-        return redirect()->route('noticias.index')->with('success', 'Noticia actualizada correctamente');
+        return redirect()->route('dashboard')->with('success', 'Noticia actualizada correctamente');
     }
 
     public function destroy(Noticia $noticia)
@@ -141,5 +182,19 @@ class NoticiaController extends Controller
         $this->authorize('eliminar noticias');
         $noticia->delete();
         return redirect()->route('noticias.index')->with('ok', 'Noticia eliminada con éxito');
+    }
+
+    public function buscar(Request $request)
+    {
+        $term = $request->input('q'); // el texto del buscador
+        $categorias = Categoria::all();
+
+        $noticias3 = Noticia::with(['categoria'])
+            ->publicadas()
+            ->buscar($term)   // usamos el scope que ya tienes en tu modelo
+            ->latest()
+            ->paginate(10);
+
+        return view('principal', compact('noticias3', 'term', 'categorias'));
     }
 }

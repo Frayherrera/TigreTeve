@@ -3,14 +3,18 @@
                     <img width="100%" src="{{ asset('img/logoHome.png') }}" alt="">
                 </div> --}}
     <ul class="nav-menu">
+        <li><a href="{{ route('noticias.home') }}">
+                Inicio
+            </a></li>
         {{-- Primeras 4 categorías --}}
         @foreach ($categorias->take(4) as $categoria)
             <li>
-                <a href="">
+                <a href="{{ route('noticias.home', $categoria->slug) }}">
                     {{ $categoria->nombre }}
                 </a>
             </li>
         @endforeach
+
 
         {{-- El resto en un dropdown --}}
         @if ($categorias->count() > 4)
@@ -19,7 +23,7 @@
                 <ul class="dropdown-menu">
                     @foreach ($categorias->skip(4) as $categoria)
                         <li>
-                            <a href="">
+                            <a href="{{ route('noticias.home', $categoria->slug) }}">
                                 {{ $categoria->nombre }}
                             </a>
                         </li>
@@ -27,11 +31,16 @@
                 </ul>
             </li>
         @endif
+
     </ul>
 
     <div class="search-box">
-        <input type="text" placeholder="Buscar noticias...">
-        <button><i class="fas fa-search"></i></button>
+        <form action="{{ route('noticias.home') }}" method="GET" class="d-flex ms-auto">
+            <input type="text" name="q" class="form-control me-2" placeholder="Buscar noticias..."
+                value="{{ request('q') }}">
+            <button type="submit" class="btn btn-outline-primary">Buscar</button>
+        </form>
+
     </div>@auth
         @role('Administrator')
             <a class="a2" href="{{ url('/dashboard') }}"
@@ -54,4 +63,3 @@
     @endauth
 
 </nav>
-

@@ -29,7 +29,8 @@ class Noticia extends Model
         return $query->where('is_featured', true);
     }
 
-    public function scopeNoD($query){
+    public function scopeNoD($query)
+    {
         return $query->where('is_featured', false);
     }
 
@@ -61,13 +62,22 @@ class Noticia extends Model
         return $this->hasMany(Media::class);
     }
     // Scopes útiles
-    public function scopePublicadas($q)
+    public function scopePublicadas($query)
     {
-        return $q->where('estado', 'publicada')->where(function ($qq) {
-            $qq->whereNull('publicado_en')
-                ->orWhere('publicado_en', '<=', now());
+        return $query->where(function ($q) {
+            // Caso 1: Publicadas (sin importar fecha)
+            $q->where('estado', 'publicada')
+
+                // Caso 2: Programadas cuya fecha ya llegó
+                ->orWhere(function ($sub) {
+                    $sub->where('estado', 'programada')
+                        ->where('publicado_en', '<=', now());
+                });
         });
     }
+
+
+
     public function scopeProgramadasPara($q, $fecha)
     {
         return $q->where('estado', 'programada')->where(
@@ -76,12 +86,24 @@ class Noticia extends Model
             $fecha
         );
     }
-    public function scopeBuscar($q, $term)
+    public function scopeBuscar($query, $term)
     {
-        $t = Str::of($term)->trim();
-        if ($t->isEmpty()) return $q;
-        return $q->where(function ($qq) use ($t) {
-            $qq->where('titulo', 'like', "%{$t}%")->orWhere('resumen', 'like', "%{$t}%")->orWhere('cuerpo', 'like', "%{$t}%");
+        $term = trim($term);
+
+        if (empty($term)) {
+            return $query;
+        }
+
+        return $query->where(function ($q) use ($term) {
+            $q->where('titulo', 'LIKE', "%{$term}%")
+                ->orWhere('resumen', 'LIKE', "%{$term}%")
+                ->orWhere('cuerpo', 'LIKE', "%{$term}%")
+                ->orWhereHas('tags', function ($tagQuery) use ($term) {
+                    $tagQuery->where('nombre', 'LIKE', "%{$term}%");
+                })
+                ->orWhereHas('categoria', function ($catQuery) use ($term) {
+                    $catQuery->where('nombre', 'LIKE', "%{$term}%");
+                });
         });
     }
 }
