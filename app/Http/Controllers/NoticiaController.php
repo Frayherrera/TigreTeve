@@ -61,20 +61,6 @@ class NoticiaController extends Controller
         return view('principal', compact('noticias', 'categorias', 'noticiasDestacadas', 'categoria'));
     }
 
-
-    // public function porCategoria($slug)
-    // {
-    //     $categorias = Categoria::all();
-    //     $categoria = Categoria::where('slug', $slug)->firstOrFail();
-    //     $noticiasDestacadas = Noticia::destacadas()->get();
-    //     $noticias2 = Noticia::with(['categoria'])
-    //         ->where('category_id', $categoria->id)
-    //         ->publicadas()
-    //         ->latest()
-    //         ->paginate(10);
-
-    //     return view('principal', compact('noticias2', 'categoria', 'noticiasDestacadas', 'categorias'));
-    // }
     public function index(Request $request)
     {
         $filtro = $request->get('estado'); // puede ser 'publicadas', 'borradores', 'programadas'
@@ -89,7 +75,7 @@ class NoticiaController extends Controller
             $query->where('estado', 'programada');
         }
 
-        $noticias = $query->latest()->paginate(10);
+        $noticias = $query->latest()->paginate(6);
 
         return view('panel.dashboard', compact('noticias', 'filtro'));
     }
@@ -122,9 +108,7 @@ class NoticiaController extends Controller
 
         return redirect()->route('noticias.index')->with('ok', 'Noticia creada');
     }
-    public function iniciar(){
-        return view('welcome');
-    }
+
     public function show($slug)
     {
         $categorias = Categoria::all();
@@ -171,7 +155,7 @@ class NoticiaController extends Controller
         // Sincronizar tags
         $noticia->tags()->sync($request->input('tags', []));
 
-        return redirect()->route('dashboard')->with('success', 'Noticia actualizada correctamente');
+        return redirect()->route('noticias.index')->with('success', 'Noticia actualizada correctamente');
     }
 
     public function destroy(Noticia $noticia)

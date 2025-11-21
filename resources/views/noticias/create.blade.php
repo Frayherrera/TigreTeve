@@ -87,7 +87,7 @@ py-2">{{ old('resumen', $n->resumen ?? '') }}</textarea>
                     </label>
                 </div>
                 <div class="flex justify-end gap-2">
-                    <a style="text-decoration: none" href="{{ route('dashboard') }}" class="px-4 py-2 rounded-xl border">Cancelar</a>
+                    <a style="text-decoration: none" href="{{ route('noticias.index') }}" class="px-4 py-2 rounded-xl border">Cancelar</a>
                     <button style="color: white" class="px-4 py-2 rounded-xl bg-green-500">Guardar</ button>
                 </div>
             </form>

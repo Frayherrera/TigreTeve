@@ -74,7 +74,7 @@
         </style>
 
         <div class="menu-label">Principal</div>
-        <a href="{{ route('dashboard') }}" class="menu-item active">
+        <a href="{{ route('noticias.index') }}" class="menu-item active">
             <i class="fa-solid fa-book"></i>
             <span>Entradas</span>
         </a>

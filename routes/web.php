@@ -7,21 +7,18 @@ use App\Http\Controllers\WeatherController;
 use App\Models\Noticia;
 
 
-Route::get('/dashboard', [NoticiaController::class, 'index'])->name('noticias.index');
+
 Route::get('/noticia/{id}', [NoticiaController::class, 'show'])->name('news.show');
 
-Route::get('/dashboard', function () {
-    $noticias = Noticia::latest()->get();
-    return view('panel.dashboard', compact('noticias'));
-})->middleware(['auth', 'verified'])->name('dashboard');
-
+Route::get('/noticias', [NoticiaController::class, 'index'])->name('noticias.index')->middleware('role:Administrator');
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
-Route::resource('noticias', NoticiaController::class);
+Route::resource('noticias', NoticiaController::class)->except(['index']);
 Route::get('/noticias/{slug}', [NoticiaController::class, 'show'])->name('noticias.show2');
 
 require __DIR__ . '/auth.php';
+
 Route::get('/{slug?}', [NoticiaController::class, 'p'])->name('noticias.home');

@@ -2,7 +2,7 @@
 
     <div class="padre">
         <div class="header2 flex">
-            <div  class="dropdown me-auto">
+            <div class="dropdown me-auto">
                 <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton"
                     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     {{ ucfirst($filtro ?? 'Todas') }}
@@ -15,12 +15,9 @@
                         href="{{ route('noticias.index', ['estado' => 'borradores']) }}">Borradores</a>
                     <a class="dropdown-item"
                         href="{{ route('noticias.index', ['estado' => 'programadas']) }}">Programadas</a>
-                    <a class="dropdown-item"
-                        href="{{ route('noticias.index') }}">Todas</a>
+                    <a class="dropdown-item" href="{{ route('noticias.index') }}">Todas</a>
                 </div>
-
             </div>
-
         </div>
 
         @forelse ($noticias as $noticia)
@@ -31,8 +28,16 @@
                 <p class="text-muted">No hay noticias disponibles en este estado.</p>
             </div>
         @endforelse
+
+        {{-- PAGINACIÓN --}}
+        @if ($noticias->hasPages())
+            <div class="paginacion-container mt-4 w-100">
+                {{ $noticias->appends(['estado' => $filtro])->links() }}
+            </div>
+        @endif
+    </div>
 </x-app-layout>
-</div>
+
 <style>
     .padre {
         margin: 10px;
@@ -45,5 +50,11 @@
     .header2 {
         width: 100%;
         margin-bottom: 20px
+    }
+
+    .paginacion-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 2rem;
     }
 </style>
