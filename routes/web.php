@@ -3,8 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\NoticiaController;
-use App\Http\Controllers\WeatherController;
-use App\Models\Noticia;
+
 
 
 

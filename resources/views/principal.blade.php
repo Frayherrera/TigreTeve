@@ -7,16 +7,12 @@
     <section class="hero">
         <div class="container">
             <div class="hero-content">
-                <h1>Tu Fuente Confiable de Noticias</h1>
+                <h1>Tigre teve</h1>
                 <p>Mantente informado con las últimas noticias de Colombia y el mundo. Cobertura completa, análisis
                     profundo y reportajes exclusivos.</p>
             </div>
         </div>
     </section>
-
-
-
-
     <main class="main-content">
         <div class="container">
             <div class="content-grid">
