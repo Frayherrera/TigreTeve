@@ -33,7 +33,7 @@
         <form action="{{ route('noticias.home') }}" method="GET" class="d-flex ms-auto">
             <input type="text" name="q" class="form-control me-2" placeholder="Buscar noticias..."
                 value="{{ request('q') }}">
-            <button type="submit" class="btn btn-outline-primary">Buscar</button>
+            <button type="submit" style="background-color: rgb(182, 111, 70)" >Buscar</button>
         </form>
 
     </div>

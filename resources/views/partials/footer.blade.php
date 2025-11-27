@@ -38,7 +38,7 @@
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2025 NoticiasBlog. Todos los derechos reservados. | Diseñado con ❤️ para informar mejor</p>
+                <p>&copy; 2025 TigreTeve. Todos los derechos reservados. | Diseñado con ❤️ para informar mejor</p>
             </div>
         </div>
     </footer>
