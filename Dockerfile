@@ -4,6 +4,7 @@ FROM php:8.2-apache
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
+    curl \
     libpq-dev \
     libpng-dev \
     libjpeg-dev \
@@ -13,21 +14,30 @@ RUN apt-get update && apt-get install -y \
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg
 RUN docker-php-ext-install pdo pdo_mysql pdo_pgsql gd
 
+# Instalar Node.js + npm (LTS)
+RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
+    && apt-get install -y nodejs
+
 # Habilitar mod_rewrite para Laravel
 RUN a2enmod rewrite
 
-# Copiar el proyecto
+# Configurar carpeta de trabajo
 WORKDIR /var/www/html
+
+# Copiar proyecto
 COPY . .
+
+# Instalar dependencias de npm
+RUN npm install && npm run build
 
 # Instalar Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader
 
-# Configurar Apache para Laravel
+# Permisos
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Configuración de VirtualHost
+# Copiar configuración de Apache
 COPY vhost.conf /etc/apache2/sites-available/000-default.conf
 
 EXPOSE 80

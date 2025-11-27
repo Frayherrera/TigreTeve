@@ -58,7 +58,7 @@ class NoticiaController extends Controller
             $categoria = null; // para la vista
         }
 
-        return view('principal', compact('noticias', 'categorias', 'noticiasDestacadas', 'categoria'));
+        return view('Principal', compact('noticias', 'categorias', 'noticiasDestacadas', 'categoria'));
     }
 
     public function index(Request $request)
