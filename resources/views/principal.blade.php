@@ -15,7 +15,7 @@
                     @forelse ($noticiasDestacadas as $noticia)
                         <x-featured-article :noticia="$noticia" />
                         @empty
-                        <h2>No hay noticias destacadas en esta categoria</h2>
+                        <h2>No hay noticias destacadas en esta categoria!</h2>
                             
                     @endforelse
 
