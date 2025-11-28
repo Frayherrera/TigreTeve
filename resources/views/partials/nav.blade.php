@@ -288,7 +288,7 @@
    RESPONSIVE - MOBILE
    ================================ */
 
-    @media (max-width: 992px) {
+    @media (max-width: 1168px) {
         .hamburger {
             display: flex;
         }
