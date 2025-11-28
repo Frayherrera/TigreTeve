@@ -21,10 +21,9 @@ class NoticiaController extends Controller
         $term = $request->input('q');
         $categorias = Categoria::all();
 
-        // Si no paso slug, no busco categoría
         if ($slug) {
             $categoria = Categoria::where('slug', $slug)->first();
-            
+
             $noticias = Noticia::with(['categoria'])
                 ->where('category_id', $categoria->id)
                 ->NoD()
@@ -41,13 +40,14 @@ class NoticiaController extends Controller
                 ->latest()
                 ->get();
         } else {
-            // si no paso slug, traigo todo
+
             $noticias = Noticia::with(['categoria'])
                 ->NoD()
                 ->publicadas()
                 ->buscar($term)
                 ->latest()
                 ->get();
+
             $noticiasDestacadas = Noticia::with(['categoria'])
                 ->publicadas()
                 ->destacadas()
@@ -55,11 +55,24 @@ class NoticiaController extends Controller
                 ->latest()
                 ->get();
 
-            $categoria = null; // para la vista
+            $categoria = null;
         }
 
-        return view('principal', compact('noticias', 'categorias', 'noticiasDestacadas', 'categoria'));
+        // 🔥 Aquí agregas las 3 más vistas
+        $topVistas = Noticia::publicadas()
+            ->orderBy('vistas', 'DESC')
+            ->take(3)
+            ->get();
+
+        return view('principal', compact(
+            'noticias',
+            'categorias',
+            'noticiasDestacadas',
+            'categoria',
+            'topVistas'   // 👈 No olvides enviarlas a la vista
+        ));
     }
+
 
     public function index(Request $request)
     {

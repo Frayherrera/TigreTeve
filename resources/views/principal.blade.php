@@ -4,7 +4,7 @@
 
 @section('content')
 
-    <section class="hero">        
+    <section class="hero">
     </section>
     <main class="main-content">
         <div class="container">
@@ -14,9 +14,8 @@
                     <!-- Featured Article -->
                     @forelse ($noticiasDestacadas as $noticia)
                         <x-featured-article :noticia="$noticia" />
-                        @empty
+                    @empty
                         <h2>No hay noticias destacadas en esta categoria!</h2>
-                            
                     @endforelse
 
                     <!-- Blog Grid -->
@@ -34,31 +33,27 @@
                     <!-- Trending Articles -->
                     <div class="sidebar-widget">
                         <h3 class="widget-title"><i class="fas fa-fire"></i> Tendencia</h3>
-                        <div class="trending-item">
-                            <img src="https://images.unsplash.com/photo-1495020689067-958852a7765e?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80"
-                                alt="Trending">
-                            <div class="trending-content">
-                                <h4>Crisis energética: nuevas medidas gubernamentales</h4>
-                                <span><i class="fas fa-eye"></i> 15k lecturas</span>
+
+                        @forelse($topVistas as $noticia)
+                            <div class="trending-item">
+                                <img src="{{ Storage::disk('s3')->url($noticia->portada_path) }}"
+                                    alt="{{ $noticia->titulo }}">
+
+                                <div class="trending-content">
+                                    <h4>
+                                        <a href="{{ route('noticias.show', $noticia->slug) }}">
+                                            {{ $noticia->titulo }}
+                                        </a>
+                                    </h4>
+
+                                    <span><i class="fas fa-eye"></i> {{ $noticia->vistas }} lecturas</span>
+                                </div>
                             </div>
-                        </div>
-                        <div class="trending-item">
-                            <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80"
-                                alt="Trending">
-                            <div class="trending-content">
-                                <h4>Innovación en agricultura sostenible</h4>
-                                <span><i class="fas fa-eye"></i> 12k lecturas</span>
-                            </div>
-                        </div>
-                        <div class="trending-item">
-                            <img src="https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80"
-                                alt="Trending">
-                            <div class="trending-content">
-                                <h4>Mercado inmobiliario muestra signos de recuperación</h4>
-                                <span><i class="fas fa-eye"></i> 9k lecturas</span>
-                            </div>
-                        </div>
+                        @empty
+                            <p>No hay noticias en tendencia aún.</p>
+                        @endforelse
                     </div>
+
 
 
                     <!-- Weather Widget -->
