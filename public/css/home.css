@@ -246,7 +246,7 @@ body {
    ================================ */
 
 .hero {
-    background: url('https://scontent.fsvz2-1.fna.fbcdn.net/v/t39.30808-6/490719456_2192403837878098_6742991795068933000_n.jpg?_nc_cat=104&ccb=1-7&_nc_sid=cc71e4&_nc_eui2=AeGo8LrCLW3Nx2t_IsugcJN3-6LSbU5Mt2D7otJtTky3YLnOKy2vgd5tTmZlR6j7_DayYLhTN6uFvzUPJvz4RFTV&_nc_ohc=uizs8WyajFwQ7kNvwFOFVdH&_nc_oc=AdkcdWnSTT6VqKjuRRIpcnE6zp3zfQr454RhxH6CoL8BBV_he5LefbO8ksK375pXP8M&_nc_zt=23&_nc_ht=scontent.fsvz2-1.fna&_nc_gid=Vg9zT3x39FXiedAjJjIUHA&oh=00_AfgojqfdzKNmNSX29qMUBpya2NfnhQoVHuhrNFdH3tyDcA&oe=692D3B17');
+    
     background-size: cover;
     background-position: center;
     height: 500px;
