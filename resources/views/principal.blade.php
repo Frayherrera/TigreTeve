@@ -41,7 +41,7 @@
 
                                 <div class="trending-content">
                                     <h4>
-                                        <a href="{{ route('noticias.show', $noticia->slug) }}">
+                                        <a style="text-decoration: none; color: inherit;" href="{{ route('noticias.show', $noticia->slug) }}">
                                             {{ $noticia->titulo }}
                                         </a>
                                     </h4>

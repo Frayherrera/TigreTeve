@@ -4,7 +4,7 @@
     @endif
     <div class="article-content">
         <div class="article-meta">
-            <span class="category-badge">{{ $noticia->categoria->nombre ?? 'Sin categoría' }}</span>
+            <span id="ss" class="category-badge">{{ $noticia->categoria->nombre ?? 'Sin categoría' }}</span>
             <span><i class="fas fa-calendar"></i> {{ $noticia->created_at->format('d M Y') }}</span>
             <span><i class="fas fa-user"></i> {{ $noticia->user->name ?? 'Anónimo' }}</span>
             <span><i class="fas fa-eye"></i> {{ number_format($noticia->vistas) }} lecturas</span>
