@@ -11,6 +11,6 @@
         </div>
         <h2>{{ $noticia->titulo }}</h2>
         <p>{{ Str::limit($noticia->resumen ?? strip_tags($noticia->cuerpo), 200) }}</p>
-        <a href="{{ route('noticias.show', $noticia->slug) }}" class="read-more">Leer artículo completo</a>
+        <a href="{{ route('noticias.show', $noticia->slug) }}" class="read-more2">Leer artículo completo</a>
     </div>
 </article>
