@@ -6,9 +6,9 @@ use App\Http\Controllers\NoticiaController;
 use App\Http\Controllers\WhatsAppController;
 
 
-Route::get('/whatsapp-masivo', [WhatsAppController::class, 'index']);
-Route::post('/whatsapp-masivo/enviar', [WhatsAppController::class, 'mensajeMasivo'])->name('whatsapp.masivo');
-Route::get('/whatsapp-masivo/resultados/{batchId}', [WhatsAppController::class, 'resultados'])->name('whatsapp.resultados');
+Route::get('/whatsapp-masivo', [WhatsAppController::class, 'index'])->middleware('role:Administrator');
+Route::post('/whatsapp-masivo/enviar', [WhatsAppController::class, 'mensajeMasivo'])->name('whatsapp.masivo')->middleware('role:Administrator');
+Route::get('/whatsapp-masivo/resultados/{batchId}', [WhatsAppController::class, 'resultados'])->name('whatsapp.resultados')->middleware('role:Administrator');
 
 Route::get('/noticia/{id}', [NoticiaController::class, 'show'])->name('news.show');
 
