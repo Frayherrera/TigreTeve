@@ -74,13 +74,13 @@
         </style>
 
         <div class="menu-label">Principal</div>
-        <a href="{{ route('noticias.index') }}" class="menu-item active">
+        <a href="{{ route('noticias.index') }}" class="menu-item">
             <i class="fa-solid fa-book"></i>
             <span>Entradas</span>
         </a>
-        <a href="#" class="menu-item">
-            <i class="fas fa-chart-line"></i>
-            <span>Estadísticas</span>
+        <a href="{{ route('whatsapp.masivovista') }}" class="menu-item">
+            <i class="fa-brands fa-whatsapp"></i>
+            <span>Mensajes masivo</span>
         </a>
         <a href="#" class="menu-item">
             <i class="fa-solid fa-book"></i> <span>Notificaciones</span>

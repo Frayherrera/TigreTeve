@@ -1,3 +1,4 @@
+<x-app-layout>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -14,7 +15,6 @@
         }
 
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -268,11 +268,11 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
+    <div class="">
+        {{-- <div class="header">
             <h2><i class="fab fa-whatsapp"></i> Envío Masivo WhatsApp</h2>
             <p>Envía mensajes personalizados a múltiples contactos</p>
-        </div>
+        </div> --}}
 
         <div class="form-container">
             @if (session('msg'))
@@ -370,3 +370,4 @@
     </script>
 </body>
 </html>
+</x-app-layout>
