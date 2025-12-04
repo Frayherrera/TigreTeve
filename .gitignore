@@ -1,6 +1,9 @@
-/.phpunit.cache
+# Logs de Laravel
+storage/logs/*
+!storage/logs/.gitkeep
+
+# También deberías incluir estos otros:
 /node_modules
-/public/build
 /public/hot
 /public/storage
 /storage/*.key
@@ -9,11 +12,18 @@
 .env.backup
 .env.production
 .phpunit.result.cache
+docker-compose.override.yml
 Homestead.json
 Homestead.yaml
-auth.json
 npm-debug.log
 yarn-error.log
-/.fleet
 /.idea
 /.vscode
+/.fleet
+/.nova
+.DS_Store
+Thumbs.db
+
+# Cache de Laravel
+bootstrap/cache/*
+!bootstrap/cache/.gitkeep
