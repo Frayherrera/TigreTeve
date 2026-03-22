@@ -24,8 +24,6 @@
                             <x-blog-card :noticia="$noticia" />
                         @endforeach
                     </div>
-
-
                 </div>
 
                 <!-- Sidebar -->

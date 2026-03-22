@@ -104,11 +104,6 @@ body {
     list-style: none;
 }
 
-.logologin {
-    width: 80px;
-    height: 80px;
-}
-
 .nav-menu a {
     color: rgb(253, 253, 253);
     text-decoration: none;
@@ -516,7 +511,7 @@ body {
     color: #888;
 }
 
-.read-more2 {
+.read-more2{
     background: #010618;
     color: white;
     padding: 12px 25px;
@@ -529,11 +524,11 @@ body {
 }
 
 @media (max-width: 640px) {
-    .read-more2 {
+    .read-more2{
         font-size: 1px;
         padding: 10px 20px;
     }
-
+    
 }
 
 /* Categories */
