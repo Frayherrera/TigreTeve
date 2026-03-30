@@ -8,6 +8,7 @@ storage/logs/*
 /public/storage
 /storage/*.key
 /vendor
+/mysql_data
 .env
 .env.backup
 .env.production
