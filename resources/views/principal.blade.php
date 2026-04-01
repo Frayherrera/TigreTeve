@@ -1,6 +1,6 @@
 @extends('layouts.home')
 
-@section('title', 'Inicio')
+@section('title', 'TigreTeve - Somos Medio Local')
 
 @section('content')
 

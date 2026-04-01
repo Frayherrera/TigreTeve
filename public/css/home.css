@@ -251,29 +251,21 @@ body {
    ================================ */
 
 .hero {
-    background: url('https://scontent.fsvz2-1.fna.fbcdn.net/v/t39.30808-6/490719456_2192403837878098_6742991795068933000_n.jpg?_nc_cat=104&ccb=1-7&_nc_sid=2a1932&_nc_eui2=AeGo8LrCLW3Nx2t_IsugcJN3-6LSbU5Mt2D7otJtTky3YLnOKy2vgd5tTmZlR6j7_DayYLhTN6uFvzUPJvz4RFTV&_nc_ohc=xK_ghlQqU3EQ7kNvwEh4pi3&_nc_oc=AdqgZ6AYvx0_b-wRUQbOgGlXH17wEITtQwXitLTznCx40nh00W7Bpu-srp0ZPx0YeI0&_nc_zt=23&_nc_ht=scontent.fsvz2-1.fna&_nc_gid=gA-akluwiK4_YtNZNkjSOQ&_nc_ss=7a32e&oh=00_Afzahv2pr7ChBYM5tTq_zfATelMGmmq8tGhrA1U_JjAjpA&oe=69C54817');
-    background-size: cover;
+    background: url('../img/portada.jpg');
+    background-size: contain;
+    background-repeat: no-repeat;
     background-position: center;
-    height: 500px;
+    min-height: 500px;
+    height: auto;
     display: flex;
     align-items: center;
+    justify-content: center;
     color: white;
     text-align: center;
+    margin-top: 20px;
 }
 
-.hero-content h1 {
-    font-size: 3.5rem;
-    margin-bottom: 1rem;
-    font-weight: 700;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-}
 
-.hero-content p {
-    font-size: 1.2rem;
-    max-width: 600px;
-    margin: 0 auto;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-}
 
 /* ================================
    BREAKING NEWS
