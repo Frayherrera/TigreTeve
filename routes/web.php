@@ -20,6 +20,9 @@ Route::middleware('auth')->group(function () {
 });
 Route::resource('noticias', NoticiaController::class)->except(['index']);
 Route::get('/noticias/{slug}', [NoticiaController::class, 'show'])->name('noticias.show2');
+Route::get('/ping', function () {
+    return response()->json(['message' => 'pong']);
+});
 
 require __DIR__ . '/auth.php';
 
