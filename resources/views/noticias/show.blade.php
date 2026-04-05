@@ -12,7 +12,7 @@
                 <div class="relative overflow-hidden">
                     <img src="{{ Storage::disk('s3')->url($noticia->portada_path) }}" 
                          alt="Portada"
-                         class="w-full foto-fija transition-transform duration-500 hover:scale-105">
+                         class="foto-fija transition-transform duration-500 hover:scale-105">
                     <div class="absolute top-2 right-2 sm:top-4 sm:right-4">
                         @if ($noticia->estado == 'publicado')
                             <span class="tag bg-green-100 text-green-800">Publicado</span>
@@ -183,7 +183,7 @@
         /* Imagen de portada fija */
         .foto-fija {
             width: 100%;
-            height: 250px;
+            height: 100%;
             object-fit: cover;
             display: block;
         }
@@ -205,7 +205,7 @@
         /* Tablets (768px+) */
         @media (min-width: 768px) {
             .foto-fija {
-                height: 350px;
+                
             }
 
             .tag {
@@ -217,7 +217,7 @@
         /* Desktop (1024px+) */
         @media (min-width: 1024px) {
             .foto-fija {
-                height: 500px;
+                height: 100%;
             }
 
             .article-body img {
