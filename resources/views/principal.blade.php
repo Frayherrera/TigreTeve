@@ -4,7 +4,8 @@
 
 @section('content')
 
-
+    <section class="hero">
+    </section>
     <main class="main-content">
         
         <div class="container">
