@@ -35,6 +35,8 @@ if ('serviceWorker' in navigator) {
 
     @include('partials.footer')
     @livewireScripts
+
+     @vite(['resources/js/app.js'])
 </body>
 
 </html>
