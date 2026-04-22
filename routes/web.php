@@ -9,7 +9,7 @@ use App\Http\Controllers\WhatsAppController;
 Route::get('/whatsapp-masivo', [WhatsAppController::class, 'index'])->middleware('role:Administrator') ->name('whatsapp.masivovista')    ;
 Route::post('/whatsapp-masivo/enviar', [WhatsAppController::class, 'mensajeMasivo'])->name('whatsapp.masivo')->middleware('role:Administrator');
 Route::get('/whatsapp-masivo/resultados/{batchId}', [WhatsAppController::class, 'resultados'])->name('whatsapp.resultados')->middleware('role:Administrator');
-
+Route::view('/offline', 'offline');
 Route::get('/noticia/{id}', [NoticiaController::class, 'show'])->name('news.show');
 
 Route::get('/noticias', [NoticiaController::class, 'index'])->name('noticias.index')->middleware('role:Administrator');

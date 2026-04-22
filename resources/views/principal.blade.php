@@ -4,14 +4,15 @@
 
 @section('content')
 
-    <section class="hero">
-    </section>
+
     <main class="main-content">
+        
         <div class="container">
             <div class="content-grid">
                 <!-- Main Content -->
                 <div class="main-articles">
                     <!-- Featured Article -->
+                     
                     @forelse ($noticiasDestacadas as $noticia)
                         <x-featured-article :noticia="$noticia" />
                     @empty
