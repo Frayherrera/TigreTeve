@@ -1,7 +1,7 @@
 {
   "name": "TigreTeve",
   "short_name": "Tigre",
-  "start_url": "/",
+  "start_url": "https://tigreteve.online/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
