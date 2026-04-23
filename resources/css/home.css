@@ -104,6 +104,11 @@ body {
     list-style: none;
 }
 
+.logologin {
+    width: 80px;
+    height: 80px;
+}
+
 .nav-menu a {
     color: rgb(253, 253, 253);
     text-decoration: none;
@@ -259,19 +264,8 @@ body {
     text-align: center;
     margin-top: 20px;
 }
-.hero-content h1 {
-    font-size: 3.5rem;
-    margin-bottom: 1rem;
-    font-weight: 700;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-}
 
-.hero-content p {
-    font-size: 1.2rem;
-    max-width: 600px;
-    margin: 0 auto;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-}
+
 
 /* ================================
    BREAKING NEWS
@@ -428,7 +422,7 @@ body {
 
 .blog-card img {
     width: 100%;
-    height: 200px;
+    /* height: 300px; */
     object-fit: cover;
 }
 
@@ -514,7 +508,7 @@ body {
     color: #888;
 }
 
-.read-more2{
+.read-more2 {
     background: #010618;
     color: white;
     padding: 12px 25px;
@@ -527,11 +521,11 @@ body {
 }
 
 @media (max-width: 640px) {
-    .read-more2{
+    .read-more2 {
         font-size: 1px;
         padding: 10px 20px;
     }
-    
+
 }
 
 /* Categories */
