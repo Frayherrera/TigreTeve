@@ -7,22 +7,16 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>@yield('title', 'Tigre teve')</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <script src="{{ asset('js/responsive.js') }}"></script>
     @livewireStyles
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#000000">
 
-    <link href="/icons/icon-192.png" sizes="192x192" rel="apple-touch-startup-image">
-    <link href="/icons/icon-512.png" sizes="512x512" rel="apple-touch-startup-image">
- @vite(['resources/js/app.js'])
+    <link href="/build/assets/icon-192-DMXoe3Dq.png" sizes="192x192" rel="apple-touch-startup-image">
+    <link href="/build/assets/icon-192-DMXoe3Dq.png" sizes="512x512" rel="apple-touch-startup-image">
+    
+    @vite(['resources/css/app.css', 'resources/css/home.css', 'resources/js/app.js'])
 
 </head>
-<script>
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/service-worker.js')
-    .then(() => console.log('SW registrado'));
-}
-</script>
 <body class="bg-gray-100 text-gray-900">
     <div class="header">
         <div class="container">
@@ -36,7 +30,6 @@ if ('serviceWorker' in navigator) {
     @include('partials.footer')
     @livewireScripts
 
-<script src="{{ asset('js/app.js') }}"></script>
 </body>
 
 </html>

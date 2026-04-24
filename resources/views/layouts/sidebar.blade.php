@@ -1,7 +1,7 @@
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-menu">
         <div class="logo">
-            <img src="{{ asset('img/logo.png') }}" alt="" srcset="">
+            <img src="{{ secure_asset('img/logo.png') }}" alt="" srcset="">
         </div>
         <!-- From Uiverse.io by adamgiebl -->
         <div style="display: grid; place-items: center" class="flex"><button
