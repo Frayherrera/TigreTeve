@@ -1,11 +1,11 @@
 {
   "resources/css/app.css": {
-    "file": "assets/app-CAne6nwc.css",
+    "file": "assets/app-DL7k3p9M.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
   "resources/css/home.css": {
-    "file": "assets/home-ByCm1KLj.css",
+    "file": "assets/home-B76COzUr.css",
     "src": "resources/css/home.css",
     "isEntry": true
   },
@@ -16,10 +16,6 @@
   "resources/icons/icon-512.png": {
     "file": "assets/icon-192-DMXoe3Dq.png",
     "src": "resources/icons/icon-192.png"
-  },
-  "resources/img/portada.jpg": {
-    "file": "assets/portada-Cmfx5kd3.jpg",
-    "src": "resources/img/portada.jpg"
   },
   "resources/js/app.js": {
     "file": "assets/app-KL8KZgbG.js",
