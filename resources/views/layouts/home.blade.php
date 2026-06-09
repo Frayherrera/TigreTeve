@@ -25,7 +25,7 @@
         </div>
     </div>
     <main>
-        @yield('content') <!-- Contenido dinámico -->
+        @yield('content')
     </main>
 
     @include('partials.footer')
