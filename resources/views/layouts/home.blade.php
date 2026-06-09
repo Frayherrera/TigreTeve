@@ -13,7 +13,6 @@
 
     <link href="/build/assets/icon-192-DMXoe3Dq.png" sizes="192x192" rel="apple-touch-startup-image">
     <link href="/build/assets/icon-192-DMXoe3Dq.png" sizes="512x512" rel="apple-touch-startup-image">
-    
     @vite(['resources/css/app.css', 'resources/css/home.css', 'resources/js/app.js'])
 
 </head>
@@ -32,5 +31,5 @@
     @livewireScripts
 
 </body>
-
+    
 </html>

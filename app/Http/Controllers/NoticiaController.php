@@ -10,6 +10,8 @@ use App\Models\Tag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 
@@ -64,12 +66,15 @@ class NoticiaController extends Controller
             ->take(3)
             ->get();
 
+        $weather = $this->getWeather();
+
         return view('principal', compact(
             'noticias',
             'categorias',
             'noticiasDestacadas',
             'categoria',
-            'topVistas'   // 👈 No olvides enviarlas a la vista
+            'topVistas',
+            'weather'
         ));
     }
 
@@ -192,6 +197,59 @@ class NoticiaController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('principal', compact('noticias3', 'term', 'categorias'));
+        $weather = $this->getWeather();
+
+        return view('principal', compact('noticias3', 'term', 'categorias', 'weather'));
+    }
+
+    private function getWeather(): array
+    {
+        return Cache::remember('weather_aguachica', 1800, function () {
+            try {
+                $response = Http::timeout(5)->get('https://wttr.in/Aguachica?format=j1');
+                if ($response->successful()) {
+                    $data = $response->json();
+                    $current = $data['current_condition'][0] ?? [];
+                    $forecast = $data['weather'][0] ?? [];
+
+                    return [
+                        'temp' => $current['temp_C'] ?? '--',
+                        'desc' => $current['weatherDesc'][0]['value'] ?? '--',
+                        'humidity' => $current['humidity'] ?? '--',
+                        'wind' => $current['windspeedKmph'] ?? '--',
+                        'max' => $forecast['maxtempC'] ?? '--',
+                        'min' => $forecast['mintempC'] ?? '--',
+                        'icon' => $this->weatherIcon($current['weatherCode'] ?? ''),
+                    ];
+                }
+            } catch (\Exception $e) {
+                // fallback silencioso
+            }
+
+            return [
+                'temp' => '--',
+                'desc' => '--',
+                'humidity' => '--',
+                'wind' => '--',
+                'max' => '--',
+                'min' => '--',
+                'icon' => 'fa-sun',
+            ];
+        });
+    }
+
+    private function weatherIcon(string $code): string
+    {
+        return match (true) {
+            $code >= 113 && $code <= 116 => 'fa-sun',           // Clear / Sunny
+            $code >= 119 && $code <= 122 => 'fa-cloud',         // Partly cloudy
+            $code >= 143 && $code <= 200 => 'fa-smog',          // Fog / Mist
+            $code >= 176 && $code <= 200 => 'fa-cloud-rain',    // Rain
+            $code >= 227 && $code <= 236 => 'fa-snowflake',     // Snow
+            $code >= 248 && $code <= 260 => 'fa-smog',          // Fog
+            $code >= 263 && $code <= 389 => 'fa-cloud-showers-heavy', // Heavy rain / Thunder
+            $code >= 392 && $code <= 395 => 'fa-bolt',          // Thunder with hail
+            default => 'fa-sun',
+        };
     }
 }
