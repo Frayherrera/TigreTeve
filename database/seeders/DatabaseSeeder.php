@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
     {
         //llamar al seed
         $this->call([CategoriaSeeder::class,
-         RoleSeeder::class]);
+         RoleSeeder::class,
+         NumeroSeeder::class]);
     }
 }
