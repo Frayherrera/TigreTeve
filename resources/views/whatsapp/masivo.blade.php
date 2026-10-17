@@ -248,6 +248,57 @@
             gap: 20px;
         }
 
+        /* Overlay de carga */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            z-index: 9999;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            backdrop-filter: blur(3px);
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 70px;
+            height: 70px;
+            border: 7px solid rgba(255, 255, 255, 0.25);
+            border-top-color: #25D366;
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-overlay p {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .loading-overlay small {
+            opacity: 0.8;
+            font-size: 14px;
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
         @media (max-width: 768px) {
             .form-row {
                 grid-template-columns: 1fr;
@@ -282,7 +333,7 @@
                 </div>
             @endif
 
-            <form action="{{ route('whatsapp.masivo') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('whatsapp.masivo') }}" method="POST" enctype="multipart/form-data" id="formMasivo">
                 @csrf
                 
                 <div class="form-group">
@@ -329,6 +380,12 @@
         </div>
     </div>
 
+    <div class="loading-overlay" id="loadingOverlay" aria-hidden="true">
+        <div class="spinner"></div>
+        <p>Enviando mensajes masivos...</p>
+        <small>Por favor no cierres ni recargues la página, esto puede tardar unos segundos.</small>
+    </div>
+
     <script>
         // Actualizar texto del label del archivo
         document.getElementById('file').addEventListener('change', function(e) {
@@ -366,6 +423,25 @@
             } else {
                 counter.style.color = '#666';
             }
+        });
+
+        // Mostrar overlay de carga al enviar el formulario
+        const formMasivo = document.getElementById('formMasivo');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+
+        formMasivo.addEventListener('submit', function () {
+            loadingOverlay.classList.add('active');
+            loadingOverlay.setAttribute('aria-hidden', 'false');
+
+            const btn = formMasivo.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+        });
+
+        // Si el navegador vuelve de caché (botón atrás), ocultar el overlay
+        window.addEventListener('pageshow', function () {
+            loadingOverlay.classList.remove('active');
+            loadingOverlay.setAttribute('aria-hidden', 'true');
         });
     </script>
 </body>

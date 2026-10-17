@@ -8,6 +8,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
+use App\Models\Configuracion;
 use App\Models\WhatsappLog;
 use Throwable;
 
@@ -30,49 +31,69 @@ class EnviarWhatsAppJob implements ShouldQueue
 
     public function handle()
     {
-        $phoneId =  env('WHATSAPP_PHONE_ID');
-        $token =  env('META_TOKEN');
+        $phoneId = Configuracion::valor('idnumero');
+        $token = Configuracion::valor('tokenw');
+
+        if (!$token || !$phoneId) {
+            throw new \Exception("Faltan parámetros 'tokenw' o 'idnumero' en la tabla configuraciones");
+        }
+
+        $aLink = explode("/", $this->payload['link'] ?? '');
 
         // Armar el body conforme a tu plantilla "noticia"
         $data = [
-            "messaging_product" => "whatsapp",
-            "to" => $this->phone,
-            "type" => "template",
-            "template" => [
-                "name" => 'noticiamodificable',
-                "language" => ["code" => 'en'],
-                "components" => [
-
+            'messaging_product' => 'whatsapp',
+            'to' => $this->phone,
+            'type' => 'template',
+            'template' => [
+                'name' => 'noticiamodificable',
+                'language' => ['code' => 'es_CO'],
+                'components' => [
                     [
-                        "type" => "body",
-                        "parameters" => [
-                            ["type" => "text", "text" => $this->payload['titulo'] ],
-                            ["type" => "text", "text" => $this->payload['cuerpo'] ]
-                        ]
+                        'type' => 'header',
+                        'parameters' => [
+                            [
+                                'type' => 'text',
+                                'parameter_name' => 'titulo',
+                                'text' => $this->payload['titulo'],
+                            ],
+                        ],
                     ],
-                    // Botón URL dinámico (solo si link existe)
                     [
-                        "type" => "button",
-                        "sub_type" => "url",
-                        "index" => "0",
-                        "parameters" => [
-                            ["type" => "text", "text" => $this->payload['link']]
-                        ]
-                    ]
-                ]
-            ]
+                        'type' => 'body',
+                        'parameters' => [
+                            [
+                                'type' => 'text',
+                                'parameter_name' => 'cuerpo',
+                                'text' => $this->payload['cuerpo'],
+                            ],
+                        ],
+                    ],
+                    [
+                        'type' => 'button',
+                        'sub_type' => 'url',
+                        'index' => '0',
+                        'parameters' => [
+                            [
+                                'type' => 'text',
+                                'text' => $aLink[4]."/".$aLink[5],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
         ];
 
         // Llamada a la API
-        $response = Http::withToken("EAARlU1FaprYBPZBUMJIu32FsG9sOxcBv06ex8s8ZAw48lM06CLQx3jarZC2qmJ6mjGOUBXQAPPi51qelzmiDZAbvyQ4nhTvPYttb3ler1MfhrX3SZAbF6aoktSkJqNyg6oVvcLx7VTJmoMBrB2CKtDPMCes4Mz0vZBG3jgIwJ27Qsr6XTxFt5fTw8lG65kGCwiu1xWpteLjoytjMv5")
-            ->post("https://graph.facebook.com/v22.0/904202119433611/messages", $data);
+        $response = Http::withToken($token)
+            ->post("https://graph.facebook.com/v25.0/{$phoneId}/messages", $data);
 
         $json = $response->json();
 
         // Guardar o actualizar log
         $logData = [
             'phone' => $this->phone,
-            'response' => json_encode($json),
+            'response' => json_encode($json)."-----".(json_encode($response)),
             'batch_id' => $this->payload['batch_id'] ?? null,
         ];
 

@@ -22,7 +22,6 @@ class WhatsAppController extends Controller
         $request->validate([
             'titulo' => 'required|string',
             'cuerpo' => 'required|string',
-
             'link'   => 'nullable|string',
 
         ]);
