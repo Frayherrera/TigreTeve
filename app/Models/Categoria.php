@@ -13,6 +13,6 @@ class Categoria extends Model
 
     public function noticias()
     {
-        return $this->hasMany(Noticia::class);
+        return $this->hasMany(Noticia::class, 'category_id');
     }
 }

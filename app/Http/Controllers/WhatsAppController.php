@@ -14,7 +14,9 @@ class WhatsAppController extends Controller
 {
     public function index()
     {
-        return view("whatsapp.masivo");
+        return view("whatsapp.masivo", [
+            'dbCount' => Numero::count(),
+        ]);
     }
 
     public function mensajeMasivo(Request $request)
@@ -22,7 +24,8 @@ class WhatsAppController extends Controller
         $request->validate([
             'titulo' => 'required|string',
             'cuerpo' => 'required|string',
-            'link'   => 'nullable|string',
+            'link'   => 'required|url',
+            'image'  => 'required|url',
 
         ]);
 

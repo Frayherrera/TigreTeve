@@ -40,22 +40,30 @@ class EnviarWhatsAppJob implements ShouldQueue
 
         $aLink = explode("/", $this->payload['link'] ?? '');
 
+        // WhatsApp rechaza saltos de línea, tabs y más de 4 espacios seguidos en parámetros de plantilla
+        $titulo = trim(preg_replace('/\s+/', ' ', $this->payload['titulo'] ?? ''));
+        $cuerpo = trim(preg_replace('/\s+/', ' ', $this->payload['cuerpo'] ?? ''));
+
+        $imageLink = $this->payload['image'] ?? "https://scontent.fbga2-1.fna.fbcdn.net/v/t39.30808-6/710827267_122161493078659430_7386242778208805000_n.jpg?stp=dst-jpg_tt6&cstp=mx1680x624&ctp=s1680x624&_nc_cat=108&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=lB6uMTgD258Q7kNvwEC9G-7&_nc_oc=AdqFCGx3GGUiH7-ywIRRP1yxRzxOuFGAnvmbhzqj4hDcAntBJEw0BbH6KZ-Qq0a0UDQ&_nc_zt=23&_nc_ht=scontent.fbga2-1.fna&_nc_gid=8vE0us5g6wF5WRnYK2y2aA&_nc_ss=7b2a8&oh=00_AQP9zgTMveY6yAtrK4UwjPzldUPFB54roQAszAlgDJVXEw&oe=6ADE2529";
+
         // Armar el body conforme a tu plantilla "noticia"
+
         $data = [
             'messaging_product' => 'whatsapp',
             'to' => $this->phone,
             'type' => 'template',
             'template' => [
-                'name' => 'noticiamodificable',
-                'language' => ['code' => 'es_CO'],
+                'name' => 'mensajes',
+                'language' => ['code' => 'en'],
                 'components' => [
                     [
                         'type' => 'header',
                         'parameters' => [
                             [
-                                'type' => 'text',
-                                'parameter_name' => 'titulo',
-                                'text' => $this->payload['titulo'],
+                                'type' => 'image',
+                                'image' => [
+                                    'link' => $imageLink,
+                                ],
                             ],
                         ],
                     ],
@@ -65,7 +73,12 @@ class EnviarWhatsAppJob implements ShouldQueue
                             [
                                 'type' => 'text',
                                 'parameter_name' => 'cuerpo',
-                                'text' => $this->payload['cuerpo'],
+                                'text' => $cuerpo,
+                            ],
+                            [
+                                'type' => 'text',
+                                'parameter_name' => 'titulo',
+                                'text' => $titulo,
                             ],
                         ],
                     ],
@@ -76,7 +89,7 @@ class EnviarWhatsAppJob implements ShouldQueue
                         'parameters' => [
                             [
                                 'type' => 'text',
-                                'text' => $aLink[4]."/".$aLink[5],
+                                'text' => $aLink[4] . '/' . $aLink[5],
                             ],
                         ],
                     ],
@@ -93,7 +106,7 @@ class EnviarWhatsAppJob implements ShouldQueue
         // Guardar o actualizar log
         $logData = [
             'phone' => $this->phone,
-            'response' => json_encode($json)."-----".(json_encode($response)),
+            'response' => json_encode($json) . "-----" . (json_encode($response)),
             'batch_id' => $this->payload['batch_id'] ?? null,
         ];
 

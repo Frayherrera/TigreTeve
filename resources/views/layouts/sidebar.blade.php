@@ -1,7 +1,7 @@
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-menu">
         <div class="logo">
-            <img src="{{ secure_asset('img/logo.png') }}" alt="" srcset="">
+            <img src="{{ asset('img/logo.png') }}" alt="" srcset="">
         </div>
         <!-- From Uiverse.io by adamgiebl -->
         <div style="display: grid; place-items: center" class="flex"><button
@@ -82,37 +82,29 @@
             <i class="fa-brands fa-whatsapp"></i>
             <span>Mensajes masivo</span>
         </a>
-        <a href="#" class="menu-item">
-            <i class="fa-solid fa-book"></i> <span>Notificaciones</span>
+        @role('Administrator')
+        <a href="{{ route('numeros.index') }}"
+            class="menu-item {{ request()->routeIs('numeros.*') ? 'active' : '' }}">
+            <i class="fa-solid fa-address-book"></i>
+            <span>Números</span>
         </a>
-
+        @endrole
         <div class="menu-label">Contenido</div>
-        <a href="#" class="menu-item">
+        @role('Administrator')
+        <a href="{{ route('usuarios.index') }}"
+            class="menu-item {{ request()->routeIs('usuarios.*') ? 'active' : '' }}">
             <i class="fas fa-user"></i>
             <span>Usuarios</span>
         </a>
-        <a href="#" class="menu-item">
-            <i class="fas fa-file"></i>
-            <span>Documentos</span>
+        @endrole
+        @role('Administrator|Editor|Reportero')
+        <a href="{{ route('categorias.index') }}"
+            class="menu-item {{ request()->routeIs('categorias.*') ? 'active' : '' }}">
+            <i class="fas fa-tags"></i>
+            <span>Categorías</span>
         </a>
-        <a href="#" class="menu-item">
-            <i class="fas fa-database"></i>
-            <span>Archivos</span>
-        </a>
+        @endrole
 
-        <div class="menu-label">Configuración</div>
-        <a href="#" class="menu-item">
-            <i class="fas fa-cog"></i>
-            <span>Ajustes</span>
-        </a>
-        <a href="#" class="menu-item">
-            <i class="fas fa-shield-alt"></i>
-            <span>Privacidad</span>
-        </a>
-        <a href="#" class="menu-item">
-            <i class="fas fa-question-circle"></i>
-            <span>Ayuda</span>
-        </a>
     </div>
 
 
