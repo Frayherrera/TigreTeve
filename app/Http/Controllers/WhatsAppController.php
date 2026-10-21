@@ -42,7 +42,7 @@ class WhatsAppController extends Controller
 
         $phones = $this->cleanAndValidatePhones($phones);
 
-        dd($phones);
+        //dd($phones);
 
         if (empty($phones)) {
             return back()->with('msg', 'No hay números para enviar.');
