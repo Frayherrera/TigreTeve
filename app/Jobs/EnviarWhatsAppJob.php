@@ -96,7 +96,7 @@ class EnviarWhatsAppJob implements ShouldQueue
                 ],
             ],
         ];
-
+         
         // Llamada a la API
         $response = Http::withToken($token)
             ->post("https://graph.facebook.com/v25.0/{$phoneId}/messages", $data);

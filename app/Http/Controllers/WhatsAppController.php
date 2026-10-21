@@ -2,19 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-use App\Models\WhatsappLog;
 use App\Jobs\EnviarWhatsAppJob;
 use App\Models\Numero;
-
+use App\Models\WhatsappLog;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class WhatsAppController extends Controller
 {
     public function index()
     {
-        return view("whatsapp.masivo", [
+        return view('whatsapp.masivo', [
             'dbCount' => Numero::count(),
         ]);
     }
@@ -24,11 +22,10 @@ class WhatsAppController extends Controller
         $request->validate([
             'titulo' => 'required|string',
             'cuerpo' => 'required|string',
-            'link'   => 'required|url',
-            'image'  => 'required|url',
+            'link' => 'required|url',
+            'image' => 'required|url',
 
         ]);
-
 
         $phones = [];
 
@@ -43,24 +40,23 @@ class WhatsAppController extends Controller
             $phones = array_merge($phones, $filePhones);
         }
 
+        $phones = $this->cleanAndValidatePhones($phones);
 
-        // $phones = $this->cleanAndValidatePhones($phones);
-
-        //dd($phones);
+        dd($phones);
 
         if (empty($phones)) {
             return back()->with('msg', 'No hay números para enviar.');
         }
-        // dd($phones);   
+        // dd($phones);
         // Crear batch_id manual para seguimiento (opcional)
         $batchId = Str::random(10);
 
         // Payload que se enviará al Job
         $payload = [
-            'titulo'   => $request->titulo,
-            'cuerpo'   => $request->cuerpo,
-            'image'    => $request->image,
-            'link'     => $request->link,
+            'titulo' => $request->titulo,
+            'cuerpo' => $request->cuerpo,
+            'image' => $request->image,
+            'link' => $request->link,
             'batch_id' => $batchId,
         ];
 
@@ -81,6 +77,7 @@ class WhatsAppController extends Controller
 
         return back()->with('msg', "Envío masivo iniciado correctamente. Lote: <strong>{$batchId}</strong>");
     }
+
     /**
      * Procesar archivo subido (CSV o Excel)
      */
@@ -92,11 +89,11 @@ class WhatsAppController extends Controller
         try {
             if ($extension === 'csv') {
                 $phones = $this->processCSV($file);
-            } else if (in_array($extension, ['xlsx', 'xls'])) {
+            } elseif (in_array($extension, ['xlsx', 'xls'])) {
                 // $phones = $this->processExcel($file);
             }
         } catch (\Exception $e) {
-            throw new \Exception("Error procesando archivo: " . $e->getMessage());
+            throw new \Exception('Error procesando archivo: '.$e->getMessage());
         }
 
         return $phones;
@@ -110,13 +107,14 @@ class WhatsAppController extends Controller
         $phones = [];
         $path = $file->getRealPath();
 
-        if (($handle = fopen($path, 'r')) !== FALSE) {
+        if (($handle = fopen($path, 'r')) !== false) {
             $firstRow = true;
 
-            while (($data = fgetcsv($handle, 1000, ',')) !== FALSE) {
+            while (($data = fgetcsv($handle, 1000, ',')) !== false) {
                 // Saltar la primera fila si es encabezado
                 if ($firstRow) {
                     $firstRow = false;
+
                     continue;
                 }
 
@@ -143,21 +141,15 @@ class WhatsAppController extends Controller
     {
         $phones = [];
 
-        // Patrones para números de teléfono
-        $patterns = [
-            '/\+?[\d\s\-\(\)\.]{7,15}/', // Patrón general
-            '/\d{7,15}/' // Solo dígitos
-        ];
+        // Un solo patrón: captura secuencias con separadores típicos
+        preg_match_all('/[0-9][0-9\s\-\(\)\.]{6,}/', $text, $matches);
 
-        foreach ($patterns as $pattern) {
-            preg_match_all($pattern, $text, $matches);
-            foreach ($matches[0] as $phone) {
-                $cleanPhone = preg_replace('/[^\d]/', '', $phone);
+        foreach ($matches[0] as $phone) {
+            $cleanPhone = preg_replace('/[^\d]/', '', $phone);
 
-                // Validar longitud básica
-                if (strlen($cleanPhone) >= 7 && strlen($cleanPhone) <= 15) {
-                    $phones[] = $cleanPhone;
-                }
+            // Validar longitud básica
+            if (strlen($cleanPhone) >= 7 && strlen($cleanPhone) <= 15) {
+                $phones[] = $cleanPhone;
             }
         }
 
@@ -176,11 +168,17 @@ class WhatsAppController extends Controller
             $cleanPhone = preg_replace('/[^\d]/', '', $phone);
 
             // Validaciones
-            if (empty($cleanPhone)) continue;
-            if (strlen($cleanPhone) < 7 || strlen($cleanPhone) > 15) continue;
+            if (empty($cleanPhone)) {
+                continue;
+            }
+            if (strlen($cleanPhone) < 7 || strlen($cleanPhone) > 15) {
+                continue;
+            }
 
             // Evitar números que sean solo ceros
-            if (preg_match('/^0+$/', $cleanPhone)) continue;
+            if (preg_match('/^0+$/', $cleanPhone)) {
+                continue;
+            }
 
             $cleanPhones[] = $cleanPhone;
         }
