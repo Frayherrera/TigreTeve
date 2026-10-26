@@ -4,10 +4,7 @@
             <form method="POST" action="{{ route('noticias.update', $n->id) }}" enctype="multipart/form-data"
                 class="max-w-3xl mx-auto bg-white p-6 rounded-2xl shadow space-y-4">
                 @csrf
-                @method('PUT') @if (($method ?? 'POST') === 'POST')
-                @else
-                    @method('PUT')
-                @endif
+                @method('PUT')
                 <div>
                     <label class="block text-sm font-medium">Título</label>
                     <input name="titulo" value="{{ old('titulo', $n->titulo ?? '') }}"

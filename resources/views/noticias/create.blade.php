@@ -1,7 +1,7 @@
 <x-app-layout>
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <form method="POST" action="{{ Route('noticias.store') }}" enctype="multipart/form-data" 15
+            <form method="POST" action="{{ route('noticias.store') }}" enctype="multipart/form-data"
                 class="max-w-3xl mx-auto bg-white p-6 rounded-2xl shadow space-y-4">
                 @csrf
                 @if (($method ?? 'POST') === 'POST')

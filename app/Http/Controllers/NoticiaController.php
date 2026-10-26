@@ -117,8 +117,15 @@ class NoticiaController extends Controller
 
         if ($request->hasFile('portada')) {
             $file = $request->file('portada');
-            $route = Storage::disk('s3')->put('imagenes', $file);
-            $data['portada_path'] = $route;
+            \Log::info('Uploading to S3', ['original_name' => $file->getClientOriginalName(), 'size' => $file->getSize(), 'mime' => $file->getMimeType()]);
+            try {
+                $route = Storage::disk('s3')->put('imagenes', $file);
+                \Log::info('S3 put result', ['route' => $route]);
+                $data['portada_path'] = $route;
+            } catch (\Throwable $e) {
+                \Log::error('S3 upload failed', ['error' => $e->getMessage()]);
+                return back()->withInput()->with('error', 'Error al subir imagen a S3: '.$e->getMessage());
+            }
         }
 
         $noticia = Noticia::create($data);
@@ -161,11 +168,22 @@ class NoticiaController extends Controller
         // Actualizar portada si suben otra
         if ($request->hasFile('portada')) {
             if ($noticia->portada_path) {
-                Storage::disk('s3')->delete($noticia->portada_path);
+                try {
+                    Storage::disk('s3')->delete($noticia->portada_path);
+                } catch (\Throwable $e) {
+                    \Log::warning('No se pudo borrar imagen anterior de S3', ['path' => $noticia->portada_path, 'error' => $e->getMessage()]);
+                }
             }
             $file = $request->file('portada');
-            $route = Storage::disk('s3')->put('imagenes', $file);
-            $data['portada_path'] = $route;
+            \Log::info('Uploading to S3 (update)', ['original_name' => $file->getClientOriginalName(), 'size' => $file->getSize()]);
+            try {
+                $route = Storage::disk('s3')->put('imagenes', $file);
+                \Log::info('S3 put result (update)', ['route' => $route]);
+                $data['portada_path'] = $route;
+            } catch (\Throwable $e) {
+                \Log::error('S3 upload failed (update)', ['error' => $e->getMessage()]);
+                return back()->withInput()->with('error', 'Error al subir imagen a S3: '.$e->getMessage());
+            }
         }
 
         $noticia->update($data);
