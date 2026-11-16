@@ -1,8 +1,8 @@
 <x-app-layout>
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <div class="py-6 sm:py-12">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
             <form method="POST" action="{{ route('noticias.update', $n->id) }}" enctype="multipart/form-data"
-                class="max-w-3xl mx-auto bg-white p-6 rounded-2xl shadow space-y-4">
+                class="max-w-3xl mx-auto bg-white p-4 sm:p-6 rounded-2xl shadow space-y-4">
                 @csrf
                 @method('PUT')
                 @if (session('ok') || ($n->fuente && $n->estado === 'borrador'))
@@ -29,7 +29,7 @@
                 <div>
                     <label class="block text-sm font-medium">Slug (opcional)</label>
                     <input name="slug"
-                        value="{{ old('slug', $n->slug ?? '') }}"class="w full border rounded-xl px-3 py-2">
+                        value="{{ old('slug', $n->slug ?? '') }}" class="w-full border rounded-xl px-3 py-2">
                 </div>
                 <div>
                     <label class="block text-sm font-medium">Resumen</label>
@@ -39,7 +39,7 @@
                     <label class="block text-sm font-medium">Cuerpo</label>
                     <textarea name="cuerpo" class="w-full border rounded-xl px-3 py-2" rows="10" required>{{ old('cuerpo', $n->cuerpo ?? '') }}</textarea>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium">Categoría</label>
                         <select name="category_id" class="w-full border rounded-xl px-3 py-2">
@@ -75,9 +75,9 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium">Portada</label>
-                    <input type="file" name="portada" accept="image/*">
+                    <input type="file" name="portada" accept="image/*" class="block w-full max-w-full text-sm">
                     @if (isset($n) && $n->portada_path)
-                        <img src="{{ Storage::url($n->portada_path) }}"class="mt-2 w-40 h-24 object-cover rounded-xl">
+                        <img src="{{ Storage::url($n->portada_path) }}" class="mt-2 w-40 h-24 object-cover rounded-xl">
                     @endif
                 </div>
                 <div class="mb-4">

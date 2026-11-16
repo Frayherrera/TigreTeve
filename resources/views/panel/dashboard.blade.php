@@ -76,7 +76,7 @@
         ];
     @endphp
 
-    <div class="px-4 sm:px-6 lg:px-8 py-8 max-w-5xl mx-auto">
+    <div class="px-4 sm:px-6 lg:px-8 py-8 max-w-5xl mx-auto" >
         {{-- Encabezado --}}
         <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
             <div>
@@ -137,7 +137,7 @@
                         };
                         $creada = $noticia->created_at->copy()->timezone($zona)->locale('es');
                     @endphp
-                    <li class="ent-fila flex items-center gap-4 px-4 sm:px-5 py-4 hover:bg-slate-50 transition-colors">
+                    <li class="ent-fila flex flex-wrap sm:flex-nowrap items-center gap-x-4 gap-y-2 px-4 sm:px-5 py-4 hover:bg-slate-50 transition-colors">
                         {{-- Miniatura --}}
                         <a href="{{ route('noticias.edit', $noticia) }}" class="hidden sm:block shrink-0" tabindex="-1" aria-hidden="true">
                             @if ($noticia->portada_path)
@@ -200,7 +200,8 @@
                         </div>
 
                         {{-- Acciones --}}
-                        <div class="ent-acciones flex items-center gap-1 shrink-0">
+                        {{-- En móvil van en su propia línea, debajo del título --}}
+                        <div class="ent-acciones flex w-full sm:w-auto items-center gap-1 shrink-0 -ml-2 sm:ml-0">
                             @if ($visible)
                                 <a href="{{ route('noticias.show', $noticia->slug) }}" target="_blank" rel="noopener"
                                     class="ent-accion flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-200 hover:text-slate-800"

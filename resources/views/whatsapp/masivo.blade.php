@@ -748,9 +748,14 @@
             }
         }
 
+        /* Sin esto las columnas no bajan del ancho mínimo de su contenido y la página se desborda en móvil. */
+        .wa-grid > * {
+            min-width: 0;
+        }
+
         @media (max-width: 900px) {
             .wa-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: minmax(0, 1fr);
             }
 
             .wa-col-preview {
