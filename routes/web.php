@@ -7,6 +7,7 @@ use App\Http\Controllers\WhatsAppController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\NumeroController;
+use App\Http\Controllers\NoticiaExternaController;
 
 
 Route::get('/whatsapp-masivo', [WhatsAppController::class, 'index'])->middleware('role:Administrator') ->name('whatsapp.masivovista')    ;
@@ -25,6 +26,10 @@ Route::resource('noticias', NoticiaController::class)->except(['index']);
 Route::resource('usuarios', UserController::class)->except(['show'])->middleware('role:Administrator');
 Route::middleware('role:Administrator|Editor|Reportero')->group(function () {
     Route::get('categorias', [CategoriaController::class, 'index'])->name('categorias.index');
+});
+Route::middleware('role:Administrator|Editor|Reportero')->group(function () {
+    Route::get('noticias-externas', [NoticiaExternaController::class, 'index'])->name('externas.index');
+    Route::post('noticias-externas/importar', [NoticiaExternaController::class, 'importar'])->name('externas.importar');
 });
 Route::middleware('role:Administrator|Editor')->group(function () {
     Route::post('categorias', [CategoriaController::class, 'store'])->name('categorias.store');

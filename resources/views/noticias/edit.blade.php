@@ -5,6 +5,22 @@
                 class="max-w-3xl mx-auto bg-white p-6 rounded-2xl shadow space-y-4">
                 @csrf
                 @method('PUT')
+                @if (session('ok') || ($n->fuente && $n->estado === 'borrador'))
+                    <div class="flex items-start gap-3 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">
+                        <i class="fa-regular fa-newspaper mt-0.5"></i>
+                        <div class="min-w-0">
+                            @if (session('ok'))
+                                <p class="font-medium">{{ session('ok') }}</p>
+                            @endif
+                            @if ($n->fuente)
+                                <a href="{{ $n->fuente }}" target="_blank" rel="noopener noreferrer"
+                                    class="inline-flex items-center gap-1.5 text-sky-700 underline underline-offset-2 hover:text-sky-900">
+                                    Leer la nota original <i class="fas fa-arrow-up-right-from-square text-xs"></i>
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                @endif
                 <div>
                     <label class="block text-sm font-medium">Título</label>
                     <input name="titulo" value="{{ old('titulo', $n->titulo ?? '') }}"

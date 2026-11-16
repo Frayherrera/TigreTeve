@@ -8,7 +8,9 @@
 
     @if ($hero)
     <section class="hero">
-        <div class="hero-bg" style="background-image: url('{{ Storage::disk('s3')->url($hero->portada_path) }}');"></div>
+        @if ($hero->portada_path)
+            <div class="hero-bg" style="background-image: url('{{ Storage::disk('s3')->url($hero->portada_path) }}');"></div>
+        @endif
         <div class="hero-overlay"></div>
         <div class="hero-content">
             <span class="category-badge">{{ $hero->categoria->nombre ?? 'Destacado' }}</span>
@@ -64,8 +66,15 @@
 
                         @forelse($topVistas as $noticia)
                             <div class="trending-item">
-                                <img src="{{ Storage::disk('s3')->url($noticia->portada_path) }}"
-                                     alt="{{ $noticia->titulo }}">
+                                @if ($noticia->portada_path)
+                                    <img src="{{ Storage::disk('s3')->url($noticia->portada_path) }}"
+                                         alt="{{ $noticia->titulo }}">
+                                @else
+                                    <span aria-hidden="true"
+                                          style="width:70px;height:52px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#f1f5f9;color:#94a3b8;">
+                                        <i class="fa-regular fa-newspaper"></i>
+                                    </span>
+                                @endif
                                 <div class="trending-content">
                                     <h4>
                                         <a style="text-decoration: none; color: inherit;" href="{{ route('noticias.show', $noticia->slug) }}">

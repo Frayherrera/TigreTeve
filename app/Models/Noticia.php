@@ -20,6 +20,7 @@ class Noticia extends Model
         'publicado_en',
         'portada_path',
         'fuente',
+        'enlace_google',
         'is_featured'
     ];
     protected $casts = ['publicado_en' => 'datetime'];

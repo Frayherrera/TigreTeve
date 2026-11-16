@@ -78,6 +78,13 @@
             <i class="fa-solid fa-book"></i>
             <span>Entradas</span>
         </a>
+        @role('Administrator|Editor|Reportero')
+        <a href="{{ route('externas.index') }}"
+            class="menu-item {{ request()->routeIs('externas.*') ? 'active' : '' }}">
+            <i class="fa-regular fa-newspaper"></i>
+            <span>Noticias externas</span>
+        </a>
+        @endrole
         <a href="{{ route('whatsapp.masivovista') }}" class="menu-item">
             <i class="fa-brands fa-whatsapp"></i>
             <span>Mensajes masivo</span>
