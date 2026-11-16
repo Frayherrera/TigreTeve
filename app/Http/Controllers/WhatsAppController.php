@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Jobs\EnviarWhatsAppJob;
 use App\Models\Numero;
 use App\Models\WhatsappLog;
+use App\Services\FacebookPostService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -15,6 +16,28 @@ class WhatsAppController extends Controller
         return view('whatsapp.masivo', [
             'dbCount' => Numero::count(),
         ]);
+    }
+
+    /** Lee una publicación de Facebook y devuelve los campos del mensaje (JSON para el formulario). */
+    public function leerFacebook(Request $request, FacebookPostService $facebook)
+    {
+        $data = $request->validate([
+            'url' => ['required', 'url', 'max:2048'],
+        ], [
+            'url.required' => 'Pega el enlace de la publicación de Facebook.',
+            'url.url' => 'El enlace no es válido.',
+        ]);
+
+        if (! FacebookPostService::esEnlaceDeFacebook($data['url'])) {
+            return response()->json(['message' => 'El enlace debe ser de una publicación de Facebook.'], 422);
+        }
+
+        $resultado = $facebook->leer($data['url']);
+        if (! $resultado['ok']) {
+            return response()->json(['message' => $resultado['error']], 422);
+        }
+
+        return response()->json($resultado);
     }
 
     public function mensajeMasivo(Request $request)
