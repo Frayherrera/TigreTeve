@@ -57,7 +57,7 @@
             <div>
                 <h1 class="text-2xl font-semibold text-slate-800">Noticias externas</h1>
                 <p class="text-sm text-slate-500 mt-1">
-                    Titulares de Google Noticias Colombia. Importa uno como borrador con su texto y foto.
+                    Titulares de Google Noticias Colombia. Importa uno y se publica con su texto y foto.
                 </p>
             </div>
             @unless ($error)
@@ -159,7 +159,10 @@
                                         @csrf
                                         <input type="hidden" name="titulo" value="{{ $item['titulo'] }}">
                                         <input type="hidden" name="enlace" value="{{ $item['enlace'] }}">
-                                        <button type="submit" title="Crear borrador con este titular"
+                                        @if ($tema && !$busqueda)
+                                            <input type="hidden" name="tema" value="{{ $tema }}">
+                                        @endif
+                                        <button type="submit" title="Importar y publicar esta noticia"
                                             class="ext-importar inline-flex items-center gap-1.5 rounded-lg border bg-white px-3 py-1.5 text-xs font-medium">
                                             <i class="fas fa-file-import"></i>
                                             <span class="hidden sm:inline">Importar</span>
@@ -181,8 +184,8 @@
         <p class="mt-4 flex items-start gap-2 text-xs text-slate-500">
             <i class="fas fa-circle-info mt-0.5"></i>
             <span>
-                Importar crea un borrador con el texto, el resumen y la foto del medio original (la foto se sube a S3),
-                y guarda el enlace del medio como fuente. Puede tardar unos segundos.
+                Importar publica la noticia de una vez con el texto, el resumen y la foto del medio original (la foto se sube a S3)
+                y guarda el enlace del medio como fuente. Si no se puede traer el texto, queda como borrador. Puede tardar unos segundos.
             </span>
         </p>
     </div>

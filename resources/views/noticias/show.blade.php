@@ -90,8 +90,13 @@
                 </div>
 
                 {{-- Cuerpo --}}
-                <div class="prose prose-sm sm:prose-base lg:prose-lg max-w-none mb-6 sm:mb-8 text-gray-700 leading-relaxed article-body">
-                    {!! nl2br(e($noticia->cuerpo)) !!}
+                {{-- Cada bloque separado por una línea en blanco es un párrafo; los saltos simples se respetan con <br>. --}}
+                <div lang="es" class="prose prose-sm sm:prose-base lg:prose-lg max-w-none mb-6 sm:mb-8 text-gray-700 leading-relaxed article-body">
+                    @foreach (preg_split('/\n[ \t]*\n/', str_replace(["\r\n", "\r"], "\n", trim($noticia->cuerpo))) as $parrafo)
+                        @if (trim($parrafo) !== '')
+                            <p>{!! nl2br(e(trim($parrafo))) !!}</p>
+                        @endif
+                    @endforeach
                 </div>
 
                 {{-- Fuente --}}
@@ -196,6 +201,10 @@
 
         .article-body p {
             margin-bottom: 1rem;
+            text-align: justify;
+            /* Separa palabras en sílabas (lang="es") para que el justificado no deje huecos grandes en móvil. */
+            -webkit-hyphens: auto;
+            hyphens: auto;
         }
 
         /* ================================

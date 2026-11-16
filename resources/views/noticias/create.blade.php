@@ -49,16 +49,7 @@ py-2">{{ old('resumen', $n->resumen ?? '') }}</textarea>
                         </select>
                     </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium">Fecha/Hora de publicación (si programada)</label>
-                    <input type="datetime-local" name="publicado_en"
-                        value="{{ old(
-                            'publicado_en',
-                            optional($n->publicado_en ?? null)->format('Y-m
-                                                                        d\TH:i'),
-                        ) }}"
-                        class="border rounded-xl px-3 py-2">
-                </div>
+                @include('noticias._programacion')
                 <div>
                     <label class="block text-sm font-medium">Tags</label>
                     <div class="flex flex-wrap gap-2">

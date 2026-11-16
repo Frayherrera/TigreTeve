@@ -81,21 +81,29 @@ class NoticiaController extends Controller
 
     public function index(Request $request)
     {
-        $filtro = $request->get('estado'); // puede ser 'publicadas', 'borradores', 'programadas'
+        $filtros = ['publicadas' => 'publicada', 'programadas' => 'programada', 'borradores' => 'borrador'];
+        $filtro = array_key_exists($request->get('estado'), $filtros) ? $request->get('estado') : null;
+        $buscar = trim((string) $request->get('q', ''));
 
-        $query = Noticia::query();
+        $query = Noticia::with(['user', 'categoria'])->withCount('comentarios');
 
-        if ($filtro === 'publicadas') {
-            $query->where('estado', 'publicada');
-        } elseif ($filtro === 'borradores') {
-            $query->where('estado', 'borrador');
-        } elseif ($filtro === 'programadas') {
-            $query->where('estado', 'programada');
+        if ($filtro) {
+            $query->where('estado', $filtros[$filtro]);
+        }
+        if ($buscar !== '') {
+            $query->where('titulo', 'LIKE', "%{$buscar}%");
         }
 
-        $noticias = $query->latest()->paginate(6);
+        $noticias = $query->latest()->paginate(12)->withQueryString();
 
-        return view('panel.dashboard', compact('noticias', 'filtro'));
+        // Conteos para las pestañas (respetan la búsqueda).
+        $conteos = Noticia::query()
+            ->when($buscar !== '', fn ($q) => $q->where('titulo', 'LIKE', "%{$buscar}%"))
+            ->selectRaw('estado, COUNT(*) as total')
+            ->groupBy('estado')
+            ->pluck('total', 'estado');
+
+        return view('panel.dashboard', compact('noticias', 'filtro', 'buscar', 'conteos'));
     }
 
     public function create()

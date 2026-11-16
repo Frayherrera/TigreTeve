@@ -2,11 +2,14 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\ProgramaPublicacion;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StoreNoticiaRequest extends FormRequest
 {
+    use ProgramaPublicacion;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -34,7 +37,7 @@ class StoreNoticiaRequest extends FormRequest
                 'required',
                 Rule::in(['borrador', 'publicada', 'programada'])
             ],
-            'publicado_en' => ['nullable', 'date'],
+            'publicado_en' => $this->reglasPublicadoEn(),
             'portada' => ['nullable', 'image', 'max:2048'],
         ];
     }

@@ -93,7 +93,7 @@ XML;
         $this->fakeImportacion('<html><head>
             <meta property="og:image" content="https://www.eltiempo.com/img/portada.jpg">
             <meta property="og:description" content="El Gobierno anunció la construcción de una vía.">
-            <script type="application/ld+json">' . json_encode(['@context' => 'https://schema.org', '@graph' => [['@type' => 'NewsArticle', 'articleBody' => $cuerpo]]]) . '</script>
+            <script type="application/ld+json">' . json_encode(['@context' => 'https://schema.org', '@graph' => [['@type' => 'NewsArticle', 'articleSection' => ['POLÍTICA', 'Congreso'], 'articleBody' => $cuerpo]]]) . '</script>
             </head><body><nav><p>Menú con un enlace largo que no debería entrar en el cuerpo de la nota.</p></nav></body></html>');
 
         $usuario = $this->reportero();
@@ -106,10 +106,12 @@ XML;
 
         $this->assertSame(1, Noticia::count());
         $noticia = Noticia::first();
-        $this->assertSame('borrador', $noticia->estado);
+        $this->assertSame('publicada', $noticia->estado);
         $this->assertSame($cuerpo, $noticia->cuerpo);
         $this->assertSame('El Gobierno anunció la construcción de una vía.', $noticia->resumen);
         $this->assertSame(self::ARTICULO, $noticia->fuente);
+        $this->assertSame('Política', $noticia->categoria->nombre);
+        $this->assertSame('politica', $noticia->categoria->slug);
         $this->assertSame(self::ENLACE, $noticia->enlace_google);
         $this->assertSame($usuario->id, $noticia->user_id);
         $this->assertStringStartsWith('imagenes/', $noticia->portada_path);
@@ -140,7 +142,35 @@ XML;
         $noticia = Noticia::first();
         $this->assertSame(implode("\n\n", array_map(fn ($n) => $this->parrafo($n), range(1, 4))), $noticia->cuerpo);
         $this->assertNull($noticia->portada_path);
+        $this->assertSame('publicada', $noticia->estado);
         $this->assertSame(self::ARTICULO, $noticia->fuente);
+        $this->assertSame('General', $noticia->categoria->nombre);
+    }
+
+    public function test_la_seccion_de_google_manda_y_reutiliza_categoria_existente(): void
+    {
+        Storage::fake('s3');
+        \App\Models\Categoria::create(['nombre' => 'Deportes', 'slug' => 'deportes']);
+        $this->fakeImportacion('<html><head><meta property="article:section" content="Fútbol"></head><body></body></html>');
+
+        $this->actingAs($this->reportero())
+            ->post(route('externas.importar'), ['titulo' => 'Gol', 'enlace' => self::ENLACE, 'tema' => 'SPORTS'])
+            ->assertSessionHas('ok', fn ($m) => str_contains($m, 'Categoría: Deportes.'));
+
+        $this->assertSame(1, \App\Models\Categoria::count());
+        $this->assertSame('Deportes', Noticia::first()->categoria->nombre);
+    }
+
+    public function test_seccion_generica_o_reservada_cae_en_general(): void
+    {
+        Storage::fake('s3');
+        $this->fakeImportacion('<html><head><meta property="article:section" content="Noticias"></head><body></body></html>');
+
+        $this->actingAs($this->reportero())
+            ->post(route('externas.importar'), ['titulo' => 'Nota', 'enlace' => self::ENLACE])
+            ->assertSessionHas('ok', fn ($m) => str_contains($m, 'Categoría: General (nueva).'));
+
+        $this->assertNull(\App\Models\Categoria::where('slug', 'noticias')->first());
     }
 
     public function test_si_no_se_resuelve_el_enlace_crea_borrador_vacio(): void
@@ -152,8 +182,83 @@ XML;
             ->assertSessionHas('ok', fn ($m) => str_contains($m, 'no se pudo extraer el texto'));
 
         $noticia = Noticia::first();
+        $this->assertSame('borrador', $noticia->estado);
         $this->assertSame('', $noticia->cuerpo);
         $this->assertSame(self::ENLACE, $noticia->fuente);
+    }
+
+    /** Importa una página simulada y devuelve el cuerpo guardado. */
+    private function cuerpoImportado(string $html): string
+    {
+        Storage::fake('s3');
+        $this->fakeImportacion($html);
+        $this->actingAs($this->reportero())
+            ->post(route('externas.importar'), ['titulo' => 'Nota', 'enlace' => self::ENLACE]);
+
+        return Noticia::firstOrFail()->cuerpo;
+    }
+
+    private function jsonLd(string $cuerpo): string
+    {
+        return '<script type="application/ld+json">' . json_encode(['@type' => 'NewsArticle', 'articleBody' => $cuerpo]) . '</script>';
+    }
+
+    public function test_article_body_sin_saltos_usa_los_parrafos_de_la_pagina(): void
+    {
+        $parrafos = array_map(fn ($n) => $this->parrafo($n), range(1, 4));
+        $html = '<html><head>' . $this->jsonLd(implode(' ', $parrafos)) . '</head><body><article><div>'
+            . implode('', array_map(fn ($p) => "<p>{$p}</p>", $parrafos)) . '</div></article></body></html>';
+
+        $this->assertSame(implode("\n\n", $parrafos), $this->cuerpoImportado($html));
+    }
+
+    public function test_article_body_pegado_se_separa_en_parrafos_sin_partir_siglas(): void
+    {
+        $pegado = 'El ministro habló con la prensa en Bogotá durante la mañana del lunes sobre la nueva vía del Cesar y su financiación.'
+            . 'La obra costará 200.000 millones según el Gobierno, que espera iniciar en EE.UU. la compra de maquinaria para el proyecto."Es una prioridad", dijo.'
+            . '¿Cuándo empieza? Según el cronograma, en marzo del próximo año, si se aprueban los recursos en el Congreso de la República.';
+
+        $this->assertSame(
+            "El ministro habló con la prensa en Bogotá durante la mañana del lunes sobre la nueva vía del Cesar y su financiación.\n\n"
+            . "La obra costará 200.000 millones según el Gobierno, que espera iniciar en EE.UU. la compra de maquinaria para el proyecto.\n\n"
+            . "\"Es una prioridad\", dijo.\n\n"
+            . '¿Cuándo empieza? Según el cronograma, en marzo del próximo año, si se aprueban los recursos en el Congreso de la República.',
+            $this->cuerpoImportado('<html><head>' . $this->jsonLd($pegado) . '</head><body></body></html>')
+        );
+    }
+
+    public function test_respeta_br_y_subtitulos_de_la_pagina(): void
+    {
+        $html = '<html><body><article><div>'
+            . '<p>' . $this->parrafo(1) . '</p>'
+            . '<h2>Lo que viene</h2>'
+            . '<p>Primera línea de un párrafo con salto interno<br>y segunda línea del mismo párrafo, que es lo bastante larga.</p>'
+            . '<p>' . $this->parrafo(3) . '</p>'
+            . '</div></article></body></html>';
+
+        $this->assertSame(
+            $this->parrafo(1) . "\n\nLo que viene\n\n"
+            . "Primera línea de un párrafo con salto interno\ny segunda línea del mismo párrafo, que es lo bastante larga.\n\n"
+            . $this->parrafo(3),
+            $this->cuerpoImportado($html)
+        );
+    }
+
+    public function test_la_noticia_muestra_parrafos_justificados(): void
+    {
+        Http::fake();
+        $noticia = Noticia::create([
+            'user_id' => User::factory()->create()->id,
+            'titulo' => 'Nota', 'slug' => 'nota-parrafos', 'estado' => 'publicada',
+            'cuerpo' => "Primer párrafo.\r\n\r\nSegundo párrafo\r\ncon salto simple.\n\n\n\nTercero.",
+        ]);
+
+        $this->get(route('noticias.show', $noticia->slug))
+            ->assertOk()
+            ->assertSee('<p>Primer párrafo.</p>', false)
+            ->assertSee("<p>Segundo párrafo<br />\ncon salto simple.</p>", false)
+            ->assertSee('<p>Tercero.</p>', false)
+            ->assertSee('text-align: justify', false);
     }
 
     public function test_usuario_sin_rol_no_accede(): void

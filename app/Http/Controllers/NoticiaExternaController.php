@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Categoria;
 use App\Models\Noticia;
 use App\Services\ArticuloExternoService;
 use App\Services\GoogleNewsService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class NoticiaExternaController extends Controller
 {
@@ -45,6 +47,7 @@ class NoticiaExternaController extends Controller
         $data = $request->validate([
             'titulo' => ['required', 'string', 'max:255'],
             'enlace' => ['required', 'url', 'max:2048'],
+            'tema' => ['nullable', Rule::in(array_keys(GoogleNewsService::TEMAS))],
         ]);
 
         $existente = Noticia::where('enlace_google', $data['enlace'])->first();
@@ -57,24 +60,35 @@ class NoticiaExternaController extends Controller
         set_time_limit(60);
 
         $url = $articulos->resolverUrl($data['enlace']);
-        $contenido = $url ? $articulos->extraer($url) : ['cuerpo' => null, 'resumen' => null, 'imagen' => null];
+        $contenido = $url ? $articulos->extraer($url) : ['cuerpo' => null, 'resumen' => null, 'imagen' => null, 'seccion' => null];
         $portada = $contenido['imagen'] ? $articulos->subirImagen($contenido['imagen']) : null;
+
+        // Categoría: sección de Google que se estaba viendo > sección del medio > "General". Se crea si no existe.
+        $categoria = Categoria::buscarOCrear(GoogleNewsService::TEMAS[$data['tema'] ?? ''] ?? null)
+            ?? Categoria::buscarOCrear($contenido['seccion'])
+            ?? Categoria::buscarOCrear('General');
 
         $noticia = Noticia::create([
             'user_id' => $request->user()->id,
+            'category_id' => $categoria?->id,
             'titulo' => $data['titulo'],
             'slug' => Str::slug($data['titulo']) . '-' . Str::random(6),
             'resumen' => $contenido['resumen'],
             'cuerpo' => $contenido['cuerpo'] ?? '',
             'portada_path' => $portada,
-            'estado' => 'borrador',
+            // Se publica de una vez; si no se pudo traer el texto queda en borrador para no publicar una nota vacía.
+            'estado' => $contenido['cuerpo'] !== null ? 'publicada' : 'borrador',
             'fuente' => $url ?? $data['enlace'],
             'enlace_google' => $data['enlace'],
             'is_featured' => false,
         ]);
 
-        return redirect()->route('noticias.edit', $noticia)
-            ->with('ok', $this->mensaje($contenido['cuerpo'] !== null, $portada !== null, $contenido['imagen'] !== null));
+        $mensaje = $this->mensaje($contenido['cuerpo'] !== null, $portada !== null, $contenido['imagen'] !== null);
+        if ($categoria) {
+            $mensaje .= ' Categoría: ' . $categoria->nombre . ($categoria->wasRecentlyCreated ? ' (nueva).' : '.');
+        }
+
+        return redirect()->route('noticias.edit', $noticia)->with('ok', $mensaje);
     }
 
     private function mensaje(bool $hayCuerpo, bool $haySubida, bool $habiaImagen): string
@@ -89,6 +103,8 @@ class NoticiaExternaController extends Controller
             $partes[] = 'la nota no tenía foto';
         }
 
-        return 'Borrador creado: ' . implode(' y ', $partes) . '. Revísalo antes de publicar.';
+        return $hayCuerpo
+            ? 'Noticia publicada: ' . implode(' y ', $partes) . '.'
+            : 'Quedó como borrador: ' . implode(' y ', $partes) . ' antes de publicar.';
     }
 }

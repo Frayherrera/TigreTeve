@@ -76,11 +76,11 @@ class ArticuloExternoService
     }
 
     /**
-     * @return array{cuerpo: ?string, resumen: ?string, imagen: ?string}
+     * @return array{cuerpo: ?string, resumen: ?string, imagen: ?string, seccion: ?string}
      */
     public function extraer(string $url): array
     {
-        $vacio = ['cuerpo' => null, 'resumen' => null, 'imagen' => null];
+        $vacio = ['cuerpo' => null, 'resumen' => null, 'imagen' => null, 'seccion' => null];
 
         try {
             $respuesta = $this->http(10)->get($url);
@@ -102,10 +102,10 @@ class ArticuloExternoService
         $meta = fn (string $q) => trim((string) $xpath->evaluate("string(//meta[$q]/@content)"));
         $jsonLd = $this->jsonLd($xpath);
 
-        $cuerpo = $this->limpiarTexto($this->buscarClave($jsonLd, 'articleBody') ?? '');
-        if (mb_strlen($cuerpo) < 300) {
-            $cuerpo = $this->parrafos($xpath);
-        }
+        $cuerpo = $this->elegirCuerpo(
+            $this->limpiarTexto($this->buscarClave($jsonLd, 'articleBody') ?? ''),
+            $this->parrafos($xpath)
+        );
 
         $imagen = $meta('@property="og:image"') ?: $meta('@name="twitter:image"') ?: $meta('@property="og:image:url"');
         if ($imagen === '') {
@@ -115,7 +115,14 @@ class ArticuloExternoService
 
         $resumen = $meta('@property="og:description"') ?: $meta('@name="description"');
 
+        $seccion = $this->buscarClave($jsonLd, 'articleSection');
+        if (is_array($seccion)) {
+            $seccion = $seccion[0] ?? null;
+        }
+        $seccion = is_string($seccion) && trim($seccion) !== '' ? trim($seccion) : ($meta('@property="article:section"') ?: null);
+
         return [
+            'seccion' => $seccion,
             'cuerpo' => mb_strlen($cuerpo) >= 200 ? $cuerpo : null,
             'resumen' => $resumen !== '' ? Str::limit(html_entity_decode($resumen, ENT_QUOTES | ENT_HTML5, 'UTF-8'), 497) : null,
             'imagen' => is_string($imagen) && $imagen !== '' ? $this->absoluta($imagen, $url) : null,
@@ -183,20 +190,66 @@ class ArticuloExternoService
         return null;
     }
 
-    /** Toma el bloque de la página con más texto en párrafos (normalmente el cuerpo de la nota). */
+    /**
+     * Decide entre el articleBody del JSON-LD y los párrafos de la página, priorizando el que conserve
+     * la separación en párrafos (muchos medios mandan articleBody como un solo bloque sin saltos).
+     */
+    private function elegirCuerpo(string $jsonLd, string $paginas): string
+    {
+        if (mb_strlen($jsonLd) < 300) {
+            return $paginas;
+        }
+        if (str_contains($jsonLd, "\n")) {
+            return $jsonLd;
+        }
+        // articleBody sin saltos: si la página trae los mismos párrafos, se usan esos.
+        if (str_contains($paginas, "\n\n") && mb_strlen($paginas) >= mb_strlen($jsonLd) * 0.6) {
+            return $paginas;
+        }
+
+        return $this->separarParrafosPegados($jsonLd);
+    }
+
+    /**
+     * "…dijo el ministro.La medida…" → párrafos separados. Solo corta cuando una minúscula o número
+     * va seguido de punto y mayúscula sin espacio (así no parte siglas como "EE.UU.").
+     * Una comilla recta tras el punto se toma como apertura del párrafo siguiente (en español el
+     * punto va después de la comilla de cierre); solo » y ” se consideran cierre.
+     */
+    private function separarParrafosPegados(string $texto): string
+    {
+        return preg_replace(
+            '/(?<=[a-záéíóúüñ0-9][.!?]|[a-záéíóúüñ0-9][.!?][»”])(?=[A-ZÁÉÍÓÚÜÑ¿¡«"“])/u',
+            "\n\n",
+            $texto
+        );
+    }
+
+    /**
+     * Toma el bloque de la página con más texto en párrafos (normalmente el cuerpo de la nota),
+     * con sus subtítulos y respetando los <br> dentro de cada párrafo.
+     */
     private function parrafos(\DOMXPath $xpath): string
     {
         $excluir = 'ancestor::nav or ancestor::footer or ancestor::aside or ancestor::header or ancestor::figure or ancestor::form';
         $grupos = [];
 
-        foreach ($xpath->query("//p[not($excluir)]") as $p) {
-            $texto = $this->limpiarTexto($p->textContent);
-            if (mb_strlen($texto) < 40) {
+        foreach ($xpath->query("(//p | //h2 | //h3)[not($excluir)]") as $nodo) {
+            $esTitulo = $nodo->nodeName !== 'p';
+
+            foreach (iterator_to_array($nodo->getElementsByTagName('br')) as $br) {
+                $br->parentNode->replaceChild($nodo->ownerDocument->createTextNode("\n"), $br);
+            }
+
+            $texto = $this->limpiarTexto($nodo->textContent);
+            if (mb_strlen($texto) < ($esTitulo ? 3 : 40)) {
                 continue;
             }
-            $padre = spl_object_id($p->parentNode);
+
+            $padre = spl_object_id($nodo->parentNode);
             $grupos[$padre]['textos'][] = $texto;
-            $grupos[$padre]['largo'] = ($grupos[$padre]['largo'] ?? 0) + mb_strlen($texto);
+            // Solo los párrafos cuentan para elegir el bloque principal.
+            $grupos[$padre]['largo'] = ($grupos[$padre]['largo'] ?? 0) + ($esTitulo ? 0 : mb_strlen($texto));
         }
 
         if (! $grupos) {
@@ -213,9 +266,13 @@ class ArticuloExternoService
         if (! is_string($texto)) {
             return '';
         }
-        $texto = html_entity_decode(strip_tags(str_replace(['</p>', '<br>', '<br/>', '<br />'], "\n\n", $texto)), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        // articleBody a veces trae HTML: </p> y <h2> separan párrafos, <br> es un salto simple.
+        $texto = preg_replace(['~</(p|h[1-6]|li|div)>~i', '~<br\s*/?>~i'], ["\n\n", "\n"], $texto);
+        $texto = html_entity_decode(strip_tags($texto), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $texto = str_replace(["\r\n", "\r"], "\n", $texto);
         $texto = preg_replace('/[ \t\x{00A0}]+/u', ' ', $texto);
-        $texto = preg_replace('/\s*\n\s*(\n\s*)+/', "\n\n", $texto);
+        $texto = preg_replace('/ *\n */', "\n", $texto);
+        $texto = preg_replace('/\n{3,}/', "\n\n", $texto);
 
         return trim($texto);
     }
