@@ -66,7 +66,6 @@ return [
     */
 
     'timezone' => env('APP_TIMEZONE', 'UTC'),
-
     // Zona horaria en la que los editores escriben las fechas de publicación programada.
     'zona_editorial' => env('APP_ZONA_EDITORIAL', 'America/Bogota'),
 
