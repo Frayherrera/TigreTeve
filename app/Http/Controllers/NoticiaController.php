@@ -7,6 +7,8 @@ use App\Http\Requests\UpdateNoticiaRequest;
 use App\Models\Noticia;
 use App\Models\Categoria;
 use App\Models\Tag;
+use App\Services\AvisosNoticia;
+use App\Services\RegistroVistas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
@@ -68,13 +70,26 @@ class NoticiaController extends Controller
 
         $weather = $this->getWeather();
 
+        // Franja "Última hora": urgentes publicadas en las últimas 24 horas.
+        $hace24h = now()->subDay();
+        $ultimaHora = Noticia::publicadas()
+            ->where('urgente', true)
+            ->where(function ($q) use ($hace24h) {
+                $q->where('publicado_en', '>=', $hace24h)
+                    ->orWhere(fn ($s) => $s->whereNull('publicado_en')->where('created_at', '>=', $hace24h));
+            })
+            ->latest()
+            ->take(3)
+            ->get(['id', 'titulo', 'slug']);
+
         return view('principal', compact(
             'noticias',
             'categorias',
             'noticiasDestacadas',
             'categoria',
             'topVistas',
-            'weather'
+            'weather',
+            'ultimaHora'
         ));
     }
 
@@ -120,6 +135,7 @@ class NoticiaController extends Controller
         $data = $request->validated();
 
         $data['is_featured'] = $request->has('is_featured'); // ✅ Captura si el checkbox está marcado
+        $data['urgente'] = $request->boolean('urgente');
         $data['user_id'] = $request->user()->id;
         $data['slug'] = $data['slug'] ?? Str::slug($data['titulo']) . '-' . Str::random(6);
 
@@ -139,22 +155,68 @@ class NoticiaController extends Controller
         $noticia = Noticia::create($data);
         $noticia->tags()->sync($request->input('tags', []));
 
-        return redirect()->route('noticias.index')->with('ok', 'Noticia creada');
+        $avisos = $this->dispararAvisos($request, $noticia);
+
+        return redirect()->route('noticias.index')->with('ok', trim('Noticia creada. '.$avisos));
     }
 
-    public function show($slug)
+    public function show(Request $request, RegistroVistas $vistas, $slug)
     {
         $categorias = Categoria::all();
-        $noticia = Noticia::where('slug', $slug)->firstOrFail();
+        // Solo noticias visibles al público: borradores y programadas futuras dan 404.
+        $noticia = Noticia::publicadas()
+            ->with(['user', 'categoria', 'tags'])
+            ->where('slug', $slug)
+            ->firstOrFail();
 
-        abort_unless(
-            $noticia->estado === 'publicada' || $noticia->publicado_en <= now(),
-            404
-        );
+        $vistas->registrar($noticia, $request);
 
-        $noticia->increment('vistas');
+        $comentarios = $noticia->comentarios()
+            ->where('aprobado', true)
+            ->oldest()
+            ->get();
 
-        return view('noticias.show', compact('noticia', 'categorias'));
+        $relacionadas = $this->relacionadas($noticia);
+
+        return view('noticias.show', compact('noticia', 'categorias', 'comentarios', 'relacionadas'));
+    }
+
+    /**
+     * "Te puede interesar": primero de la misma categoría, luego por etiquetas
+     * compartidas y, si faltan, las más recientes.
+     */
+    private function relacionadas(Noticia $noticia, int $limite = 4)
+    {
+        $base = fn () => Noticia::publicadas()
+            ->with('categoria')
+            ->whereKeyNot($noticia->id)
+            ->latest();
+
+        $resultado = collect();
+
+        if ($noticia->category_id) {
+            $resultado = $base()->where('category_id', $noticia->category_id)->take($limite)->get();
+        }
+
+        $tagIds = $noticia->tags->pluck('id');
+        if ($resultado->count() < $limite && $tagIds->isNotEmpty()) {
+            $resultado = $resultado->merge(
+                $base()->whereNotIn('id', $resultado->pluck('id'))
+                    ->whereHas('tags', fn ($q) => $q->whereIn('tags.id', $tagIds))
+                    ->take($limite - $resultado->count())
+                    ->get()
+            );
+        }
+
+        if ($resultado->count() < $limite) {
+            $resultado = $resultado->merge(
+                $base()->whereNotIn('id', $resultado->pluck('id'))
+                    ->take($limite - $resultado->count())
+                    ->get()
+            );
+        }
+
+        return $resultado;
     }
     public function edit(Noticia $noticia)
     {
@@ -172,6 +234,7 @@ class NoticiaController extends Controller
     {
         $data = $request->validated();
         $data['is_featured'] = $request->has('is_featured');
+        $data['urgente'] = $request->boolean('urgente');
 
         // Actualizar portada si suben otra
         if ($request->hasFile('portada')) {
@@ -199,15 +262,37 @@ class NoticiaController extends Controller
         // Sincronizar tags
         $noticia->tags()->sync($request->input('tags', []));
 
-        return redirect()->route('noticias.index')->with('success', 'Noticia actualizada correctamente');
+        $avisos = $this->dispararAvisos($request, $noticia);
+
+        return redirect()->route('noticias.index')->with('success', trim('Noticia actualizada correctamente. '.$avisos));
+    }
+
+    /**
+     * Avisos marcados en el formulario: push (Administrator y Editor) y WhatsApp (Administrator).
+     * Para programadas se encolan hasta su fecha. Devuelve el texto para el aviso de éxito.
+     */
+    private function dispararAvisos(Request $request, Noticia $noticia): string
+    {
+        $avisos = app(AvisosNoticia::class);
+        $mensajes = [];
+
+        if ($request->boolean('avisar_push') && $request->user()->hasAnyRole(['Administrator', 'Editor'])) {
+            $mensajes[] = $avisos->push($noticia);
+        }
+
+        if ($request->boolean('enviar_whatsapp') && $request->user()->hasRole('Administrator')) {
+            $mensajes[] = $avisos->whatsapp($noticia);
+        }
+
+        return implode(' ', array_filter($mensajes));
     }
 
     public function destroy(Noticia $noticia)
     {
+        $this->authorize('eliminar noticias');
         if ($noticia->portada_path) {
             Storage::disk('s3')->delete($noticia->portada_path);
         }
-        $this->authorize('eliminar noticias');
         $noticia->delete();
         return redirect()->route('noticias.index')->with('ok', 'Noticia eliminada con éxito');
     }

@@ -6,8 +6,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="apple-mobile-web-app-status-bar" content="#01d679">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Tigre teve')</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    @hasSection('meta')
+        @yield('meta')
+    @else
+        {{-- Metadatos por defecto (portada y categorías) --}}
+        <meta name="description" content="Noticias de Aguachica y el sur del Cesar: lo que pasa en la región, contado por TigreTeve.">
+        <link rel="canonical" href="{{ url()->current() }}">
+        <meta property="og:site_name" content="TigreTeve">
+        <meta property="og:type" content="website">
+        <meta property="og:locale" content="es_CO">
+        <meta property="og:title" content="@yield('title', 'TigreTeve')">
+        <meta property="og:description" content="Noticias de Aguachica y el sur del Cesar.">
+        <meta property="og:url" content="{{ url()->current() }}">
+        <meta property="og:image" content="{{ asset('img/logo.png') }}">
+    @endif
+    <link rel="alternate" type="application/rss+xml" title="TigreTeve" href="{{ route('feed') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,6 +49,7 @@
     </main>
 
     @include('partials.footer')
+    @include('partials.avisos-push')
     @livewireScripts
 
 </body>

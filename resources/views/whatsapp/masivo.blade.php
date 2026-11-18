@@ -884,11 +884,18 @@
                 <h1>Envío masivo de WhatsApp</h1>
                 <p>Redacta el mensaje, revisa cómo se verá y envíalo a tu lista de contactos.</p>
             </div>
-            <a href="{{ route('numeros.index') }}"
-                class="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100">
-                <i class="fas fa-address-book"></i>
-                Administrar números
-            </a>
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ route('whatsapp.lotes') }}" style="text-decoration:none"
+                    class="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100">
+                    <i class="fas fa-list-check"></i>
+                    Envíos anteriores
+                </a>
+                <a href="{{ route('numeros.index') }}"
+                    class="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100">
+                    <i class="fas fa-address-book"></i>
+                    Administrar números
+                </a>
+            </div>
         </div>
 
         @if (session('msg'))

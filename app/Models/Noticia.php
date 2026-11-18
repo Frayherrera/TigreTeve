@@ -21,9 +21,62 @@ class Noticia extends Model
         'portada_path',
         'fuente',
         'enlace_google',
-        'is_featured'
+        'is_featured',
+        'urgente',
+        'miniatura_path',
+        'push_enviado_en',
+        'whatsapp_enviado_en',
     ];
-    protected $casts = ['publicado_en' => 'datetime'];
+    protected $casts = [
+        'publicado_en' => 'datetime',
+        'urgente' => 'boolean',
+        'push_enviado_en' => 'datetime',
+        'whatsapp_enviado_en' => 'datetime',
+    ];
+
+    /** ¿La ve el público ahora mismo? (misma regla que el scope publicadas). */
+    public function esVisible(): bool
+    {
+        return $this->estado === 'publicada'
+            || ($this->estado === 'programada' && $this->publicado_en && $this->publicado_en->lte(now()));
+    }
+
+    /** Momento en que sale al público: ahora si ya es visible, o la fecha programada. */
+    public function momentoDePublicacion(): ?\Illuminate\Support\Carbon
+    {
+        if ($this->estado === 'publicada') {
+            return now();
+        }
+
+        return $this->estado === 'programada' ? $this->publicado_en : null;
+    }
+
+    /** Fecha que se muestra como "publicada el". */
+    public function fechaPublicacion(): \Illuminate\Support\Carbon
+    {
+        return $this->publicado_en && $this->publicado_en->lte(now()) ? $this->publicado_en : $this->created_at;
+    }
+
+    /** URL de la portada en S3 (original). */
+    public function portadaUrl(): ?string
+    {
+        return $this->portada_path ? \Illuminate\Support\Facades\Storage::disk('s3')->url($this->portada_path) : null;
+    }
+
+    /** URL de la miniatura WebP si ya se generó; si no, la portada original. */
+    public function miniaturaUrl(): ?string
+    {
+        if ($this->miniatura_path) {
+            return \Illuminate\Support\Facades\Storage::disk('s3')->url($this->miniatura_path);
+        }
+
+        return $this->portadaUrl();
+    }
+
+    public function vistasDiarias()
+    {
+        return $this->hasMany(NoticiaVista::class);
+    }
 
     public function scopeDestacadas($query)
     {

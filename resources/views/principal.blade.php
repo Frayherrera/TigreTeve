@@ -6,6 +6,111 @@
 
     @php $hero = $noticiasDestacadas->first() ?? $noticias->first(); @endphp
 
+    {{-- Última hora --}}
+    @if (($ultimaHora ?? collect())->isNotEmpty())
+        <div class="uh-franja" role="region" aria-label="Última hora">
+            <div class="uh-interior">
+                <span class="uh-etiqueta"><span class="uh-punto" aria-hidden="true"></span>Última hora</span>
+                <ul class="uh-lista">
+                    @foreach ($ultimaHora as $urgente)
+                        <li><a href="{{ route('noticias.show2', $urgente->slug) }}">{{ $urgente->titulo }}</a></li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+        <style>
+            .uh-franja {
+                background: #c0392b;
+                color: #fff;
+                font-family: 'Source Sans 3', sans-serif;
+            }
+
+            .uh-interior {
+                max-width: 1280px;
+                margin: 0 auto;
+                padding: 10px 16px;
+                display: flex;
+                align-items: center;
+                gap: 14px;
+            }
+
+            .uh-etiqueta {
+                flex-shrink: 0;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                background: #fff;
+                color: #c0392b;
+                font-weight: 700;
+                font-size: 0.85rem;
+                padding: 4px 12px;
+                border-radius: 9999px;
+            }
+
+            .uh-punto {
+                width: 8px;
+                height: 8px;
+                border-radius: 9999px;
+                background: #c0392b;
+                animation: uhPulso 1.4s ease-in-out infinite;
+            }
+
+            @keyframes uhPulso {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.25; }
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                .uh-punto { animation: none; }
+            }
+
+            .uh-lista {
+                display: flex;
+                gap: 24px;
+                margin: 0;
+                padding: 0;
+                list-style: none;
+                overflow-x: auto;
+                scrollbar-width: none;
+                min-width: 0;
+            }
+
+            .uh-lista::-webkit-scrollbar {
+                display: none;
+            }
+
+            .uh-lista li {
+                flex-shrink: 0;
+                max-width: 80vw;
+            }
+
+            .uh-lista a {
+                display: block;
+                color: #fff;
+                font-weight: 600;
+                text-decoration: none;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .uh-lista a:hover {
+                text-decoration: underline;
+                color: #fff;
+            }
+
+            .uh-lista a:focus-visible {
+                outline: 2px solid #fff;
+                outline-offset: 2px;
+            }
+
+            .uh-lista li + li {
+                padding-left: 24px;
+                border-left: 1px solid rgba(255, 255, 255, 0.35);
+            }
+        </style>
+    @endif
+
     @if ($hero)
     <section class="hero">
         @if ($hero->portada_path)
@@ -67,7 +172,7 @@
                         @forelse($topVistas as $noticia)
                             <div class="trending-item">
                                 @if ($noticia->portada_path)
-                                    <img src="{{ Storage::disk('s3')->url($noticia->portada_path) }}"
+                                    <img src="{{ $noticia->miniaturaUrl() }}" loading="lazy"
                                          alt="{{ $noticia->titulo }}">
                                 @else
                                     <span aria-hidden="true"

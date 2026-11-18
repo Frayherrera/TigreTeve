@@ -6,5 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class WhatsappLog extends Model
 {
-    protected $fillable = ['phone','status','response','batch_id'];
+    protected $fillable = ['phone', 'status', 'response', 'batch_id', 'wamid', 'error'];
 }

@@ -10,7 +10,7 @@
 
 <article class="blog-card" onclick="window.location='{{ route('noticias.show', $noticia->slug) }}'">
     @if ($noticia->portada_path)
-    <img src="{{ Storage::disk('s3')->url($noticia->portada_path) }}"
+    <img src="{{ $noticia->miniaturaUrl() }}" loading="lazy"
         alt="{{ $noticia->titulo }}">
     @endif
     <div class="blog-card-content">
