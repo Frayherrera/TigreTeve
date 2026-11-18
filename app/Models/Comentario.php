@@ -8,6 +8,8 @@ class Comentario extends Model
 {
     protected $fillable = ['noticia_id', 'user_id', 'autor_nombre','autor_email','contenido','aprobado'];
 
+    protected $casts = ['aprobado' => 'boolean'];
+
     public function usuario()
     {
         return $this->belongsTo(User::class, 'user_id');

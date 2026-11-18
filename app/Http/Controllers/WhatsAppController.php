@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\EnviarWhatsAppJob;
 use App\Models\Numero;
 use App\Models\WhatsappLog;
+use App\Services\EnvioWhatsApp;
 use App\Services\FacebookPostService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class WhatsAppController extends Controller
 {
@@ -40,7 +39,7 @@ class WhatsAppController extends Controller
         return response()->json($resultado);
     }
 
-    public function mensajeMasivo(Request $request)
+    public function mensajeMasivo(Request $request, EnvioWhatsApp $envio)
     {
         $request->validate([
             'titulo' => 'required|string',
@@ -70,35 +69,75 @@ class WhatsAppController extends Controller
         if (empty($phones)) {
             return back()->with('msg', 'No hay números para enviar.');
         }
-        // dd($phones);
-        // Crear batch_id manual para seguimiento (opcional)
-        $batchId = Str::random(10);
 
-        // Payload que se enviará al Job
-        $payload = [
+        // Un log "pending" y un job por número; los dados de baja se omiten.
+        $lote = $envio->encolar($phones, [
             'titulo' => $request->titulo,
             'cuerpo' => $request->cuerpo,
             'image' => $request->image,
             'link' => $request->link,
-            'batch_id' => $batchId,
-        ];
+        ]);
 
-        // Recorrer números y enviar cada uno a la cola
-        foreach ($phones as $phone) {
-
-            // Crear log en estado "pending"
-            WhatsappLog::create([
-                'phone' => $phone,
-                'status' => 'pending',
-                'response' => null,
-                'batch_id' => $batchId,
-            ]);
-
-            // Enviar job a la cola
-            dispatch(new EnviarWhatsAppJob($phone, $payload));
+        if ($lote['encolados'] === 0) {
+            return back()->with('msg', 'Todos los números de la lista pidieron no recibir mensajes.');
         }
 
-        return back()->with('msg', "Envío masivo iniciado correctamente. Lote: <strong>{$batchId}</strong>");
+        $url = e(route('whatsapp.resultados', $lote['batch_id']));
+        $omitidos = $lote['omitidos']
+            ? " Se omitieron {$lote['omitidos']} números dados de baja."
+            : '';
+
+        return back()->with('msg', "Envío masivo iniciado: {$lote['encolados']} mensajes en cola.{$omitidos} "
+            ."<a href=\"{$url}\"><strong>Ver resultados del lote {$lote['batch_id']}</strong></a>");
+    }
+
+    /** Lista de envíos (lotes) recientes con su resumen. */
+    public function lotes()
+    {
+        $lotes = WhatsappLog::query()
+            ->whereNotNull('batch_id')
+            ->selectRaw('batch_id, COUNT(*) as total, MIN(created_at) as creado')
+            ->selectRaw("SUM(CASE WHEN status IN ('sent','delivered','read') THEN 1 ELSE 0 END) as enviados")
+            ->selectRaw("SUM(CASE WHEN status IN ('delivered','read') THEN 1 ELSE 0 END) as entregados")
+            ->selectRaw("SUM(CASE WHEN status = 'read' THEN 1 ELSE 0 END) as leidos")
+            ->selectRaw("SUM(CASE WHEN status IN ('failed','no_whatsapp','baja','cancelado') THEN 1 ELSE 0 END) as fallidos")
+            ->selectRaw("SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pendientes")
+            ->groupBy('batch_id')
+            ->orderByDesc('creado')
+            ->paginate(20);
+
+        return view('whatsapp.lotes', compact('lotes'));
+    }
+
+    /** Detalle de un lote: conteo por estado y cada número con su resultado. */
+    public function resultados(Request $request, string $batchId)
+    {
+        $base = WhatsappLog::where('batch_id', $batchId);
+        abort_unless((clone $base)->exists(), 404);
+
+        $conteos = (clone $base)->selectRaw('status, COUNT(*) as total')->groupBy('status')->pluck('total', 'status');
+
+        $estados = [
+            'pending' => 'Pendientes',
+            'sent' => 'Enviados',
+            'delivered' => 'Entregados',
+            'read' => 'Leídos',
+            'failed' => 'Fallidos',
+            'no_whatsapp' => 'Sin WhatsApp',
+            'baja' => 'Dados de baja',
+            'cancelado' => 'Cancelados',
+        ];
+        $filtro = array_key_exists($request->get('estado'), $estados) ? $request->get('estado') : null;
+
+        $logs = (clone $base)
+            ->when($filtro, fn ($q) => $q->where('status', $filtro))
+            ->orderBy('id')
+            ->paginate(50)
+            ->withQueryString();
+
+        $creado = (clone $base)->min('created_at');
+
+        return view('whatsapp.resultados', compact('batchId', 'conteos', 'estados', 'filtro', 'logs', 'creado'));
     }
 
     /**

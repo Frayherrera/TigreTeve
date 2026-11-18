@@ -141,7 +141,7 @@
                         {{-- Miniatura --}}
                         <a href="{{ route('noticias.edit', $noticia) }}" class="hidden sm:block shrink-0" tabindex="-1" aria-hidden="true">
                             @if ($noticia->portada_path)
-                                <img src="{{ Storage::disk('s3')->url($noticia->portada_path) }}" alt=""
+                                <img src="{{ $noticia->miniaturaUrl() }}" loading="lazy" alt=""
                                     loading="lazy" class="h-16 w-24 rounded-lg object-cover bg-slate-100">
                             @else
                                 <span class="flex h-16 w-24 items-center justify-center rounded-lg bg-slate-100 text-slate-400">
@@ -194,9 +194,17 @@
                             <span class="ent-num inline-flex items-center gap-1.5 w-16 justify-end" title="Vistas">
                                 <i class="fa-regular fa-eye text-slate-400"></i>{{ number_format($noticia->vistas) }}
                             </span>
-                            <span class="ent-num inline-flex items-center gap-1.5 w-10 justify-end" title="Comentarios">
-                                <i class="fa-regular fa-comment text-slate-400"></i>{{ number_format($noticia->comentarios_count) }}
-                            </span>
+                            @hasrole('Administrator')
+                                <a href="{{ route('comentarios.noticia', $noticia) }}"
+                                    class="ent-accion ent-num inline-flex items-center gap-1.5 w-10 justify-end text-slate-500 hover:text-[#3b7fa6]"
+                                    title="Ver comentarios" aria-label="Ver {{ $noticia->comentarios_count }} comentarios">
+                                    <i class="fa-regular fa-comment text-slate-400"></i>{{ number_format($noticia->comentarios_count) }}
+                                </a>
+                            @else
+                                <span class="ent-num inline-flex items-center gap-1.5 w-10 justify-end" title="Comentarios">
+                                    <i class="fa-regular fa-comment text-slate-400"></i>{{ number_format($noticia->comentarios_count) }}
+                                </span>
+                            @endhasrole
                         </div>
 
                         {{-- Acciones --}}

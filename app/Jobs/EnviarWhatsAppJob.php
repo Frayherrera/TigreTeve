@@ -2,14 +2,16 @@
 
 namespace App\Jobs;
 
+use App\Models\Configuracion;
+use App\Models\Noticia;
+use App\Models\WhatsappBaja;
+use App\Models\WhatsappLog;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
-use App\Models\Configuracion;
-use App\Models\WhatsappLog;
 use Throwable;
 
 class EnviarWhatsAppJob implements ShouldQueue
@@ -17,10 +19,18 @@ class EnviarWhatsAppJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $phone;
-    public $payload; // array con titulo, cuerpo, image, link, template, lang, batch_id
+
+    /**
+     * titulo, cuerpo, image, link, batch_id y, opcionalmente:
+     * - plantilla / idioma: plantilla de Meta a usar (por defecto "mensajes" / "en").
+     * - boton: sufijo variable del botón URL. Si no viene, se toma de "link"
+     *   (enlace de Facebook: https://www.facebook.com/{pagina}/{posts}/{id} → "{posts}/{id}").
+     */
+    public $payload;
 
     // Control de reintentos y backoff
     public $tries = 3;
+
     public $backoff = 15; // segundos antes de reintentar
 
     public function __construct(string $phone, array $payload = [])
@@ -31,30 +41,55 @@ class EnviarWhatsAppJob implements ShouldQueue
 
     public function handle()
     {
+        $batchId = $this->payload['batch_id'] ?? null;
+
+        // Envío de una noticia programada: si ya no está publicada, se cancela.
+        if (! empty($this->payload['noticia_id'])) {
+            $noticia = Noticia::find($this->payload['noticia_id']);
+            if (! $noticia || ! $noticia->esVisible()) {
+                $this->guardarLog(['status' => 'cancelado', 'error' => 'La noticia ya no está publicada.']);
+                // Permite volver a marcar el envío desde el formulario.
+                $noticia?->forceFill(['whatsapp_enviado_en' => null])->saveQuietly();
+
+                return;
+            }
+        }
+
+        // Pudo darse de baja después de encolar el envío.
+        [$enviables] = WhatsappBaja::filtrar([$this->phone]);
+        if (empty($enviables)) {
+            $this->guardarLog(['status' => 'baja', 'error' => 'El número pidió no recibir más mensajes.']);
+
+            return;
+        }
+
         $phoneId = Configuracion::valor('idnumero');
         $token = Configuracion::valor('tokenw');
 
-        if (!$token || !$phoneId) {
+        if (! $token || ! $phoneId) {
             throw new \Exception("Faltan parámetros 'tokenw' o 'idnumero' en la tabla configuraciones");
         }
-
-        $aLink = explode("/", $this->payload['link'] ?? '');
 
         // WhatsApp rechaza saltos de línea, tabs y más de 4 espacios seguidos en parámetros de plantilla
         $titulo = trim(preg_replace('/\s+/', ' ', $this->payload['titulo'] ?? ''));
         $cuerpo = trim(preg_replace('/\s+/', ' ', $this->payload['cuerpo'] ?? ''));
 
-        $imageLink = $this->payload['image'] ?? "https://scontent.fbga2-1.fna.fbcdn.net/v/t39.30808-6/710827267_122161493078659430_7386242778208805000_n.jpg?stp=dst-jpg_tt6&cstp=mx1680x624&ctp=s1680x624&_nc_cat=108&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=lB6uMTgD258Q7kNvwEC9G-7&_nc_oc=AdqFCGx3GGUiH7-ywIRRP1yxRzxOuFGAnvmbhzqj4hDcAntBJEw0BbH6KZ-Qq0a0UDQ&_nc_zt=23&_nc_ht=scontent.fbga2-1.fna&_nc_gid=8vE0us5g6wF5WRnYK2y2aA&_nc_ss=7b2a8&oh=00_AQP9zgTMveY6yAtrK4UwjPzldUPFB54roQAszAlgDJVXEw&oe=6ADE2529";
+        $imageLink = $this->payload['image'] ?? null;
 
-        // Armar el body conforme a tu plantilla "noticia"
+        $boton = $this->payload['boton'] ?? $this->sufijoDesdeLink($this->payload['link'] ?? '');
+        if ($boton === null) {
+            $this->guardarLog(['status' => 'failed', 'error' => 'El link del botón no tiene el formato que espera la plantilla.']);
+
+            return;
+        }
 
         $data = [
             'messaging_product' => 'whatsapp',
             'to' => $this->phone,
             'type' => 'template',
             'template' => [
-                'name' => 'mensajes',
-                'language' => ['code' => 'en'],
+                'name' => $this->payload['plantilla'] ?? 'mensajes',
+                'language' => ['code' => $this->payload['idioma'] ?? 'en'],
                 'components' => [
                     [
                         'type' => 'header',
@@ -89,30 +124,29 @@ class EnviarWhatsAppJob implements ShouldQueue
                         'parameters' => [
                             [
                                 'type' => 'text',
-                                'text' => $aLink[4] . '/' . $aLink[5],
+                                'text' => $boton,
                             ],
                         ],
                     ],
                 ],
             ],
         ];
-         
+
         // Llamada a la API
         $response = Http::withToken($token)
             ->post("https://graph.facebook.com/v25.0/{$phoneId}/messages", $data);
 
         $json = $response->json();
-
-        // Guardar o actualizar log
-        $logData = [
-            'phone' => $this->phone,
-            'response' => json_encode($json) . "-----" . (json_encode($response)),
-            'batch_id' => $this->payload['batch_id'] ?? null,
-        ];
+        $respuesta = json_encode($json);
 
         if ($response->successful() && isset($json['messages'])) {
-            $logData['status'] = 'sent';
-            WhatsappLog::updateOrCreate(['phone' => $this->phone, 'batch_id' => $logData['batch_id']], $logData);
+            $this->guardarLog([
+                'status' => 'sent',
+                'response' => $respuesta,
+                'wamid' => $json['messages'][0]['id'] ?? null,
+                'error' => null,
+            ]);
+
             return;
         }
 
@@ -120,8 +154,8 @@ class EnviarWhatsAppJob implements ShouldQueue
 
         // Si el número no tiene WhatsApp
         if (stripos($errorMessage, 'Recipient phone number not found') !== false) {
-            $logData['status'] = 'no_whatsapp';
-            WhatsappLog::updateOrCreate(['phone' => $this->phone, 'batch_id' => $logData['batch_id']], $logData);
+            $this->guardarLog(['status' => 'no_whatsapp', 'response' => $respuesta, 'error' => $errorMessage]);
+
             return;
         }
 
@@ -131,8 +165,33 @@ class EnviarWhatsAppJob implements ShouldQueue
         }
 
         // Errores definitivos
-        $logData['status'] = 'failed';
-        WhatsappLog::updateOrCreate(['phone' => $this->phone, 'batch_id' => $logData['batch_id']], $logData);
+        $this->guardarLog(['status' => 'failed', 'response' => $respuesta, 'error' => $errorMessage]);
+    }
+
+    /** "https://www.facebook.com/pagina/posts/123" → "posts/123". Null si no tiene ese formato. */
+    private function sufijoDesdeLink(string $link): ?string
+    {
+        $partes = explode('/', $link);
+
+        if (! isset($partes[4], $partes[5]) || $partes[4] === '' || $partes[5] === '') {
+            return null;
+        }
+
+        return $partes[4].'/'.$partes[5];
+    }
+
+    private function guardarLog(array $datos): void
+    {
+        $batchId = $this->payload['batch_id'] ?? null;
+
+        if (isset($datos['error'])) {
+            $datos['error'] = mb_substr($datos['error'], 0, 190);
+        }
+
+        WhatsappLog::updateOrCreate(
+            ['phone' => $this->phone, 'batch_id' => $batchId],
+            $datos + ['phone' => $this->phone, 'batch_id' => $batchId]
+        );
     }
 
     public function failed(Throwable $exception)
@@ -140,7 +199,7 @@ class EnviarWhatsAppJob implements ShouldQueue
         // Si agotó reintentos, marcar failed
         WhatsappLog::updateOrCreate(
             ['phone' => $this->phone, 'batch_id' => $this->payload['batch_id'] ?? null],
-            ['status' => 'failed', 'response' => $exception->getMessage()]
+            ['status' => 'failed', 'response' => $exception->getMessage(), 'error' => mb_substr($exception->getMessage(), 0, 190)]
         );
     }
 }
