@@ -30,7 +30,7 @@ Route::post('/webhooks/whatsapp', [WhatsAppWebhookController::class, 'recibir'])
 
 Route::get('/whatsapp-masivo', [WhatsAppController::class, 'index'])->middleware('role:Administrator') ->name('whatsapp.masivovista')    ;
 Route::post('/whatsapp-masivo/enviar', [WhatsAppController::class, 'mensajeMasivo'])->name('whatsapp.masivo')->middleware('role:Administrator');
-Route::post('/whatsapp-masivo/facebook', [WhatsAppController::class, 'leerFacebook'])->name('whatsapp.facebook')->middleware('role:Administrator');
+Route::get('/whatsapp-masivo/noticias', [WhatsAppController::class, 'noticias'])->name('whatsapp.noticias')->middleware('role:Administrator');
 Route::get('/whatsapp-masivo/envios', [WhatsAppController::class, 'lotes'])->name('whatsapp.lotes')->middleware('role:Administrator');
 Route::get('/whatsapp-masivo/resultados/{batchId}', [WhatsAppController::class, 'resultados'])->name('whatsapp.resultados')->middleware('role:Administrator');
 Route::get('/panel/estadisticas', [EstadisticaController::class, 'index'])->name('estadisticas.index')->middleware('role:Administrator|Editor');

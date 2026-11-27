@@ -24,7 +24,7 @@ class EnviarWhatsAppJob implements ShouldQueue
      * titulo, cuerpo, image, link, batch_id y, opcionalmente:
      * - plantilla / idioma: plantilla de Meta a usar (por defecto "mensajes" / "en").
      * - boton: sufijo variable del botón URL. Si no viene, se toma de "link"
-     *   (enlace de Facebook: https://www.facebook.com/{pagina}/{posts}/{id} → "{posts}/{id}").
+     *   (noticia de la web: https://{sitio}/noticias/{slug} → "{slug}").
      */
     public $payload;
 
@@ -168,16 +168,15 @@ class EnviarWhatsAppJob implements ShouldQueue
         $this->guardarLog(['status' => 'failed', 'response' => $respuesta, 'error' => $errorMessage]);
     }
 
-    /** "https://www.facebook.com/pagina/posts/123" → "posts/123". Null si no tiene ese formato. */
+    /**
+     * "https://sitio/noticias/mi-noticia" → "mi-noticia". Null si no tiene ese formato.
+     * El botón de la plantilla "mensajes" tiene la URL base https://noticias.tigreteve.online/noticias/{{1}}.
+     */
     private function sufijoDesdeLink(string $link): ?string
     {
-        $partes = explode('/', $link);
+        $ruta = (string) parse_url($link, PHP_URL_PATH);
 
-        if (! isset($partes[4], $partes[5]) || $partes[4] === '' || $partes[5] === '') {
-            return null;
-        }
-
-        return $partes[4].'/'.$partes[5];
+        return preg_match('#/noticias/([^/]+)/?$#', $ruta, $m) ? $m[1] : null;
     }
 
     private function guardarLog(array $datos): void

@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Noticia;
 use App\Models\Numero;
 use App\Models\WhatsappLog;
 use App\Services\EnvioWhatsApp;
-use App\Services\FacebookPostService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class WhatsAppController extends Controller
 {
@@ -17,26 +18,28 @@ class WhatsAppController extends Controller
         ]);
     }
 
-    /** Lee una publicación de Facebook y devuelve los campos del mensaje (JSON para el formulario). */
-    public function leerFacebook(Request $request, FacebookPostService $facebook)
+    /** Noticias publicadas de la web para rellenar el mensaje (JSON para el formulario). */
+    public function noticias(Request $request)
     {
-        $data = $request->validate([
-            'url' => ['required', 'url', 'max:2048'],
-        ], [
-            'url.required' => 'Pega el enlace de la publicación de Facebook.',
-            'url.url' => 'El enlace no es válido.',
-        ]);
+        $buscar = trim((string) $request->query('q', ''));
 
-        if (! FacebookPostService::esEnlaceDeFacebook($data['url'])) {
-            return response()->json(['message' => 'El enlace debe ser de una publicación de Facebook.'], 422);
-        }
+        $noticias = Noticia::publicadas()
+            ->when($buscar !== '', fn ($q) => $q->where('titulo', 'LIKE', '%'.$buscar.'%'))
+            ->latest('publicado_en')
+            ->latest('id')
+            ->limit(12)
+            ->get();
 
-        $resultado = $facebook->leer($data['url']);
-        if (! $resultado['ok']) {
-            return response()->json(['message' => $resultado['error']], 422);
-        }
-
-        return response()->json($resultado);
+        return response()->json($noticias->map(fn (Noticia $n) => [
+            'id' => $n->id,
+            'titulo' => $n->titulo,
+            'miniatura' => $n->miniaturaUrl(),
+            'fecha' => $n->fechaPublicacion()->locale('es')->diffForHumans(),
+            // Campos del mensaje
+            'image' => $n->portadaUrl() ?? asset('img/logo.png'),
+            'link' => route('noticias.show2', $n->slug),
+            'cuerpo' => Str::limit(trim(preg_replace('/\s+/', ' ', $n->resumen ?: html_entity_decode(strip_tags((string) $n->cuerpo)))), 900),
+        ])->values());
     }
 
     public function mensajeMasivo(Request $request, EnvioWhatsApp $envio)
@@ -44,9 +47,10 @@ class WhatsAppController extends Controller
         $request->validate([
             'titulo' => 'required|string',
             'cuerpo' => 'required|string',
-            'link' => 'required|url',
+            'link' => ['required', 'url', 'regex:#/noticias/[^/?\#]+/?(?:[?\#].*)?$#'],
             'image' => 'required|url',
-
+        ], [
+            'link.regex' => 'El link del botón debe ser una noticia de la web (…/noticias/slug).',
         ]);
 
         $phones = [];

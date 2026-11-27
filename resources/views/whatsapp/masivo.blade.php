@@ -748,8 +748,8 @@
             }
         }
 
-        /* Rellenar desde Facebook */
-        .wa-fb {
+        /* Rellenar con una noticia de la web */
+        .wa-nt {
             margin-bottom: 18px;
             padding: 14px;
             border: 1px dashed #b7dccf;
@@ -757,7 +757,7 @@
             background: #f3faf7;
         }
 
-        .wa-fb-label {
+        .wa-nt-label {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
@@ -768,69 +768,128 @@
             margin-bottom: 10px;
         }
 
-        .wa-fb-label .fa-facebook {
-            color: #1877f2;
+        .wa-nt-label .fa-newspaper {
+            color: #008069;
             font-size: 1rem;
         }
 
-        .wa-fb-label .wa-hint {
+        .wa-nt-label .wa-hint {
             flex-basis: 100%;
             font-weight: 400;
         }
 
-        .wa-fb-row {
-            display: flex;
-            gap: 8px;
+        .wa-nt-buscar {
+            position: relative;
         }
 
-        .wa-fb-row .wa-input {
-            min-width: 0;
-            flex: 1;
+        .wa-nt-buscar .fa-magnifying-glass {
+            position: absolute;
+            left: 13px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #8696a0;
+            font-size: 0.85rem;
+            pointer-events: none;
         }
 
-        .wa-fb-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            flex-shrink: 0;
-            padding: 0 16px;
-            border: 0;
+        .wa-nt-buscar .wa-input {
+            padding-left: 36px;
+        }
+
+        .wa-nt-lista {
+            list-style: none;
+            margin: 10px 0 0;
+            padding: 0;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #d9e7e1;
             border-radius: 10px;
-            background: #008069;
-            color: #fff;
-            font-weight: 600;
-            font-size: 0.875rem;
+            background: #fff;
+        }
+
+        .wa-nt-item + .wa-nt-item {
+            border-top: 1px solid #edf2f0;
+        }
+
+        .wa-nt-opcion {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 9px 12px;
+            border: 0;
+            background: transparent;
+            text-align: left;
             cursor: pointer;
             transition: background-color 0.15s ease;
         }
 
-        .wa-fb-btn:hover {
-            background: #006e5a;
+        .wa-nt-opcion:hover,
+        .wa-nt-opcion:focus-visible {
+            background: #f0f7f4;
+            outline: none;
         }
 
-        .wa-fb-btn[disabled] {
-            opacity: 0.7;
-            cursor: wait;
+        .wa-nt-opcion[aria-pressed="true"] {
+            background: #e1f3ec;
+            box-shadow: inset 3px 0 0 #008069;
         }
 
-        .wa-fb-status {
+        .wa-nt-mini {
+            flex-shrink: 0;
+            width: 56px;
+            height: 40px;
+            border-radius: 6px;
+            object-fit: cover;
+            background: #e9edef;
+        }
+
+        .wa-nt-texto {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .wa-nt-titulo {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            font-size: 0.875rem;
+            font-weight: 500;
+            line-height: 1.3;
+            color: #111b21;
+        }
+
+        .wa-nt-fecha {
+            display: block;
+            margin-top: 2px;
+            font-size: 0.75rem;
+            color: #667781;
+        }
+
+        .wa-nt-check {
+            flex-shrink: 0;
+            color: #008069;
+            visibility: hidden;
+        }
+
+        .wa-nt-opcion[aria-pressed="true"] .wa-nt-check {
+            visibility: visible;
+        }
+
+        .wa-nt-status {
             margin-top: 10px;
             font-size: 0.8125rem;
             line-height: 1.45;
+            color: #667781;
         }
 
-        .wa-fb-status.is-ok {
+        .wa-nt-status.is-ok {
             color: #00684f;
         }
 
-        .wa-fb-status.is-error {
+        .wa-nt-status.is-error {
             color: #c62828;
-        }
-
-        .wa-fb-status ul {
-            margin: 6px 0 0;
-            padding-left: 18px;
-            color: #8a5a00;
         }
 
         .wa-input.is-filled {
@@ -840,12 +899,6 @@
         @keyframes wa-fill {
             from { background-color: #e7f6f0; }
             to { background-color: #fff; }
-        }
-
-        @media (max-width: 560px) {
-            .wa-fb-btn span {
-                display: none;
-            }
         }
 
         /* Sin esto las columnas no bajan del ancho mínimo de su contenido y la página se desborda en móvil. */
@@ -950,22 +1003,20 @@
                             <h2 class="wa-section-title">Mensaje</h2>
                             <p class="wa-section-note">La imagen y el botón son obligatorios en la plantilla de WhatsApp.</p>
 
-                            {{-- Rellenar desde una publicación de Facebook --}}
-                            <div class="wa-fb" id="fbBox">
-                                <label for="fbUrl" class="wa-fb-label">
-                                    <i class="fab fa-facebook"></i>
-                                    Rellenar desde Facebook
-                                    <span class="wa-hint">Pega el enlace de la publicación y se completan título, imagen, botón y cuerpo.</span>
+                            {{-- Rellenar con una noticia publicada de la web --}}
+                            <div class="wa-nt" id="ntBox">
+                                <label for="ntBuscar" class="wa-nt-label">
+                                    <i class="fas fa-newspaper"></i>
+                                    Elegir una noticia de la web
+                                    <span class="wa-hint">Al elegirla se completan título, imagen, botón y cuerpo.</span>
                                 </label>
-                                <div class="wa-fb-row">
-                                    <input type="url" class="wa-input" id="fbUrl" inputmode="url" autocomplete="off"
-                                        placeholder="https://www.facebook.com/tu-pagina/posts/…">
-                                    <button type="button" class="wa-fb-btn" id="fbButton">
-                                        <i class="fas fa-wand-magic-sparkles"></i>
-                                        <span>Traer datos</span>
-                                    </button>
+                                <div class="wa-nt-buscar">
+                                    <i class="fas fa-magnifying-glass"></i>
+                                    <input type="search" class="wa-input" id="ntBuscar" autocomplete="off"
+                                        placeholder="Buscar por título…" aria-controls="ntLista">
                                 </div>
-                                <div class="wa-fb-status" id="fbStatus" role="status" aria-live="polite" hidden></div>
+                                <ul class="wa-nt-lista" id="ntLista" aria-label="Noticias publicadas" hidden></ul>
+                                <div class="wa-nt-status" id="ntStatus" role="status" aria-live="polite">Cargando noticias…</div>
                             </div>
 
                             <div class="wa-field">
@@ -981,9 +1032,15 @@
                             </div>
 
                             <div class="wa-field">
-                                <label for="link">Link del botón</label>
-                                <input type="url" class="wa-input" id="link" name="link" required
-                                    placeholder="https://tigreteve.com/noticias/slug">
+                                <label for="link">
+                                    Link del botón
+                                    <span class="wa-hint">Debe ser una noticia de la web.</span>
+                                </label>
+                                <input type="url" class="wa-input @error('link') is-invalid @enderror" id="link" name="link" required
+                                    placeholder="https://noticias.tigreteve.online/noticias/slug">
+                                @error('link')
+                                    <div class="wa-nt-status is-error">{{ $message }}</div>
+                                @enderror
                             </div>
 
                             <div class="wa-field">
@@ -1299,22 +1356,22 @@
     </script>
 
     <script>
-        // Rellenar el mensaje desde una publicación de Facebook.
+        // Rellenar el mensaje con una noticia publicada de la web.
         (function () {
-            const input = document.getElementById('fbUrl');
-            const boton = document.getElementById('fbButton');
-            const estado = document.getElementById('fbStatus');
-            const icono = boton.querySelector('i');
-            const csrf = document.querySelector('meta[name="csrf-token"]').content;
-            const esFacebook = (v) => /^https?:\/\/([a-z]+\.)?(facebook\.com|fb\.com|fb\.watch)\//i.test(v.trim());
+            const buscador = document.getElementById('ntBuscar');
+            const lista = document.getElementById('ntLista');
+            const estado = document.getElementById('ntStatus');
+            const url = @json(route('whatsapp.noticias', [], false));
+            let noticias = [];
+            let elegida = null;
+            let espera = null;
+            let peticion = 0;
 
-            function mostrar(tipo, html) {
-                estado.hidden = false;
-                estado.className = 'wa-fb-status ' + (tipo ? 'is-' + tipo : '');
-                estado.innerHTML = html;
+            function mostrar(tipo, texto) {
+                estado.hidden = !texto;
+                estado.className = 'wa-nt-status' + (tipo ? ' is-' + tipo : '');
+                estado.textContent = texto;
             }
-
-            const escapar = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
             function rellenar(id, valor) {
                 if (!valor) return;
@@ -1326,61 +1383,85 @@
                 campo.dispatchEvent(new Event('input', { bubbles: true })); // actualiza vista previa y contador
             }
 
-            async function traer() {
-                const url = input.value.trim();
-                if (!esFacebook(url)) {
-                    mostrar('error', 'Pega el enlace de una publicación de Facebook.');
-                    input.focus();
-                    return;
-                }
+            function pintar() {
+                lista.innerHTML = '';
+                noticias.forEach(function (n) {
+                    const li = document.createElement('li');
+                    li.className = 'wa-nt-item';
 
-                boton.disabled = true;
-                icono.className = 'fas fa-spinner fa-spin';
-                mostrar('', 'Leyendo la publicación… puede tardar unos segundos.');
+                    const boton = document.createElement('button');
+                    boton.type = 'button';
+                    boton.className = 'wa-nt-opcion';
+                    boton.setAttribute('aria-pressed', n.id === elegida ? 'true' : 'false');
 
+                    const img = document.createElement('img');
+                    img.className = 'wa-nt-mini';
+                    img.alt = '';
+                    img.loading = 'lazy';
+                    if (n.miniatura) img.src = n.miniatura;
+
+                    const texto = document.createElement('span');
+                    texto.className = 'wa-nt-texto';
+                    const titulo = document.createElement('span');
+                    titulo.className = 'wa-nt-titulo';
+                    titulo.textContent = n.titulo;
+                    const fecha = document.createElement('span');
+                    fecha.className = 'wa-nt-fecha';
+                    fecha.textContent = n.fecha;
+                    texto.append(titulo, fecha);
+
+                    const check = document.createElement('i');
+                    check.className = 'fas fa-circle-check wa-nt-check';
+
+                    boton.append(img, texto, check);
+                    boton.addEventListener('click', function () { elegir(n); });
+                    li.appendChild(boton);
+                    lista.appendChild(li);
+                });
+                lista.hidden = noticias.length === 0;
+            }
+
+            function elegir(n) {
+                elegida = n.id;
+                rellenar('titulo', n.titulo);
+                rellenar('image', n.image);
+                rellenar('link', n.link);
+                rellenar('cuerpo', n.cuerpo);
+                pintar();
+                mostrar('ok', 'Listo: revisa los campos antes de enviar.');
+            }
+
+            async function cargar() {
+                const id = ++peticion;
+                const q = buscador.value.trim();
+                mostrar('', 'Buscando…');
                 try {
-                    const r = await fetch(@json(route('whatsapp.facebook', [], false)), {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf },
-                        body: JSON.stringify({ url }),
-                    });
-                    const datos = await r.json().catch(() => ({}));
-
-                    if (!r.ok) {
-                        const mensaje = datos.errors?.url?.[0] || datos.message || 'No se pudo leer la publicación.';
-                        mostrar('error', escapar(mensaje));
-                        return;
-                    }
-
-                    rellenar('titulo', datos.titulo);
-                    rellenar('image', datos.image);
-                    rellenar('link', datos.link);
-                    rellenar('cuerpo', datos.cuerpo);
-
-                    const avisos = (datos.avisos || []).map((a) => '<li>' + escapar(a) + '</li>').join('');
-                    mostrar('ok', '<i class="fas fa-circle-check"></i> Listo: revisa los campos antes de enviar.' + (avisos ? '<ul>' + avisos + '</ul>' : ''));
+                    const r = await fetch(url + (q ? '?q=' + encodeURIComponent(q) : ''), { headers: { 'Accept': 'application/json' } });
+                    if (!r.ok) throw new Error();
+                    const datos = await r.json();
+                    if (id !== peticion) return; // llegó una búsqueda más nueva
+                    noticias = datos;
+                    pintar();
+                    mostrar('', noticias.length ? '' : (q ? 'No hay noticias publicadas con ese título.' : 'Aún no hay noticias publicadas.'));
                 } catch (e) {
-                    mostrar('error', 'No hubo respuesta del servidor. Revisa la conexión e inténtalo de nuevo.');
-                } finally {
-                    boton.disabled = false;
-                    icono.className = 'fas fa-wand-magic-sparkles';
+                    if (id === peticion) mostrar('error', 'No se pudieron cargar las noticias. Recarga la página.');
                 }
             }
 
-            boton.addEventListener('click', traer);
-            // Enter dentro del campo no debe enviar el formulario masivo.
-            input.addEventListener('keydown', function (e) {
+            buscador.addEventListener('input', function () {
+                clearTimeout(espera);
+                espera = setTimeout(cargar, 300);
+            });
+            // Enter dentro del buscador no debe enviar el formulario masivo.
+            buscador.addEventListener('keydown', function (e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    traer();
+                    clearTimeout(espera);
+                    cargar();
                 }
             });
-            // Al pegar un enlace de Facebook se leen los datos de una vez.
-            input.addEventListener('paste', function () {
-                setTimeout(function () {
-                    if (esFacebook(input.value) && !boton.disabled) traer();
-                }, 0);
-            });
+
+            cargar();
         })();
     </script>
 </x-app-layout>
