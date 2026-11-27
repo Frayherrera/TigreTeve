@@ -74,7 +74,8 @@
         </style>
 
         <div class="menu-label">Principal</div>
-        <a href="{{ route('noticias.index') }}" class="menu-item">
+        <a href="{{ route('noticias.index') }}"
+            class="menu-item {{ request()->routeIs('noticias.*') ? 'active' : '' }}">
             <i class="fa-solid fa-book"></i>
             <span>Entradas</span>
         </a>
@@ -92,7 +93,8 @@
             <span>Noticias externas</span>
         </a>
         @endrole
-        <a href="{{ route('whatsapp.masivovista') }}" class="menu-item">
+        <a href="{{ route('whatsapp.masivovista') }}"
+            class="menu-item {{ request()->routeIs('whatsapp.*') ? 'active' : '' }}">
             <i class="fa-brands fa-whatsapp"></i>
             <span>Mensajes masivo</span>
         </a>
