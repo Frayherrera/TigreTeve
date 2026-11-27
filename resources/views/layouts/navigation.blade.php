@@ -1,27 +1,4 @@
 <nav class="bg-white border-b border-gray-100 fixed top-0 left-0 w-full z-50 lg:pl-64">
-    <style>
-        .adm-buscar {
-            height: 40px;
-            border: 2px solid transparent;
-            border-radius: 8px;
-            background-color: #f3f3f4;
-            color: #0d0c22;
-            transition: 0.2s ease;
-        }
-
-        .adm-buscar::placeholder {
-            color: #9e9ea7;
-        }
-
-        .adm-buscar:hover,
-        .adm-buscar:focus {
-            outline: none;
-            border-color: rgba(59, 127, 166, 0.35);
-            background-color: #fff;
-            box-shadow: 0 0 0 4px rgba(59, 127, 166, 0.1);
-        }
-    </style>
-
     <div class="flex h-16 items-center gap-2 sm:gap-4 px-3 sm:px-6">
         {{-- Abrir menú lateral (móvil y tablet) --}}
         <button type="button" data-adm-abrir aria-controls="adm-menu" aria-expanded="false"
@@ -30,16 +7,8 @@
             <i class="fas fa-bars text-lg"></i>
         </button>
 
-        {{-- Buscador de entradas --}}
-        <form method="GET" action="{{ route('noticias.index') }}" role="search" class="relative flex-1 max-w-xl mx-auto">
-            <i class="fas fa-search pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm" style="color:#9e9ea7"></i>
-            <input type="search" name="q" value="{{ request()->routeIs('noticias.index') ? request('q') : '' }}"
-                placeholder="Buscar entrada" aria-label="Buscar entrada"
-                class="adm-buscar w-full pl-10 pr-3 text-sm">
-        </form>
-
         {{-- Menú de usuario --}}
-        <div class="flex shrink-0 items-center">
+        <div class="ml-auto flex shrink-0 items-center">
             <x-dropdown align="right" width="48">
                 <x-slot name="trigger">
                     <button
