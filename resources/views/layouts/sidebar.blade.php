@@ -78,6 +78,13 @@
             <i class="fa-solid fa-book"></i>
             <span>Entradas</span>
         </a>
+        @role('Administrator|Editor')
+        <a href="{{ route('estadisticas.index') }}"
+            class="menu-item {{ request()->routeIs('estadisticas.*') ? 'active' : '' }}">
+            <i class="fa-solid fa-chart-column"></i>
+            <span>Estadísticas</span>
+        </a>
+        @endrole
         @role('Administrator|Editor|Reportero')
         <a href="{{ route('externas.index') }}"
             class="menu-item {{ request()->routeIs('externas.*') ? 'active' : '' }}">
@@ -98,6 +105,11 @@
         @endrole
         <div class="menu-label">Contenido</div>
         @role('Administrator')
+        <a href="{{ route('comentarios.index') }}"
+            class="menu-item {{ request()->routeIs('comentarios.*') ? 'active' : '' }}">
+            <i class="fa-regular fa-comments"></i>
+            <span>Comentarios</span>
+        </a>
         <a href="{{ route('usuarios.index') }}"
             class="menu-item {{ request()->routeIs('usuarios.*') ? 'active' : '' }}">
             <i class="fas fa-user"></i>

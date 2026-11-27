@@ -35,5 +35,12 @@ return [
         'key' => env('OPENWEATHER_API_KEY'),
     ],
 
+    // Notificaciones push del navegador. Sin claves, el aviso de suscripción no se muestra.
+    'webpush' => [
+        'subject' => env('VAPID_SUBJECT', 'mailto:contacto@tigreteve.com'),
+        'public_key' => env('VAPID_PUBLIC_KEY'),
+        'private_key' => env('VAPID_PRIVATE_KEY'),
+    ],
+
 
 ];

@@ -16,8 +16,7 @@
                 <div>
                     <label class="block text-sm font-medium">Slug (opcional)</label>
                     <input name="slug" value="{{ old('slug', $n->slug ?? '') }}"
-                        class="w
-full border rounded-xl px-3 py-2">
+                        class="w-full border rounded-xl px-3 py-2">
                 </div>
                 <div>
                     <label class="block text-sm font-medium">Resumen</label>
@@ -72,14 +71,15 @@ py-2">{{ old('resumen', $n->resumen ?? '') }}</textarea>
                 <div class="mb-4">
                     <label class="inline-flex items-center">
                         <input type="checkbox" name="is_featured" value="1"
-                            {{ old('is_featured', $noticia->is_featured ?? false) ? 'checked' : '' }}
+                            {{ old('is_featured') ? 'checked' : '' }}
                             class="form-checkbox text-indigo-600 transition duration-150 ease-in-out">
                         <span class="ml-2 text-gray-700">¿Destacar esta noticia?</span>
                     </label>
                 </div>
+                @include('noticias._avisos')
                 <div class="flex justify-end gap-2">
                     <a style="text-decoration: none" href="{{ route('noticias.index') }}" class="px-4 py-2 rounded-xl border">Cancelar</a>
-                    <button style="color: white" class="px-4 py-2 rounded-xl bg-green-500">Guardar</ button>
+                    <button type="submit" style="color: white" class="px-4 py-2 rounded-xl bg-green-500">Guardar</button>
                 </div>
             </form>
         </div>

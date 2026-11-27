@@ -1,9 +1,24 @@
 services:
   app:
     build: .
+    image: tigreteve-app
     container_name: laravel_apache
     ports:
       - "8080:80"
+    volumes:
+      - .:/var/www/html
+    networks:
+      - laravel
+
+  # Procesa la cola: envíos de WhatsApp, notificaciones push y miniaturas.
+  # Sin este servicio los envíos se quedan en "pendiente".
+  queue:
+    image: tigreteve-app
+    container_name: laravel_queue
+    depends_on:
+      - app
+    command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+    restart: unless-stopped
     volumes:
       - .:/var/www/html
     networks:

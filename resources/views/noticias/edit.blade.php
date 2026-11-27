@@ -87,11 +87,11 @@
                         <span class="ml-2 text-gray-700">¿Destacar esta noticia?</span>
                     </label>
                 </div>
+                @include('noticias._avisos')
                 <div class="flex justify-end gap-2">
                     <a style="text-decoration: none" href="{{ route('noticias.index') }}"
                         class="px-4 py-2 rounded-xl border">Cancelar</a>
-                    <button style="color: white" class="px-4 py-2 rounded-xl bg-green-500">Guardar cambios
-                        </ button>
+                    <button type="submit" style="color: white" class="px-4 py-2 rounded-xl bg-green-500">Guardar cambios</button>
                 </div>
             </form>
         </div>

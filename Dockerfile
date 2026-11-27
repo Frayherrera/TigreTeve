@@ -8,11 +8,15 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     libpng-dev \
     libjpeg-dev \
-    libfreetype6-dev
+    libfreetype6-dev \
+    libwebp-dev \
+    libgmp-dev
 
 # Extensiones de PHP
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg
-RUN docker-php-ext-install pdo pdo_mysql pdo_pgsql gd
+# - gd con WebP: miniaturas de las portadas.
+# - bcmath y gmp: aceleran el cifrado de las notificaciones push.
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp
+RUN docker-php-ext-install pdo pdo_mysql pdo_pgsql gd bcmath gmp
 
 # Instalar Node.js + npm (LTS)
 RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
