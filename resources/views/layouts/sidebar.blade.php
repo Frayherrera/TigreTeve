@@ -145,7 +145,6 @@
     }
 
     .sidebar {
-        border-top-width: 64px;
         width: 280px;
         background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
         color: rgb(92, 63, 63);
