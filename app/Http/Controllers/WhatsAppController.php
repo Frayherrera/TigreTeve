@@ -6,6 +6,7 @@ use App\Models\Noticia;
 use App\Models\Numero;
 use App\Models\WhatsappLog;
 use App\Services\EnvioWhatsApp;
+use App\Support\Telefono;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -230,23 +231,12 @@ class WhatsAppController extends Controller
         $cleanPhones = [];
 
         foreach ($phones as $phone) {
-            // Limpiar el número
-            $cleanPhone = preg_replace('/[^\d]/', '', $phone);
+            // A los celulares de 10 dígitos se les agrega el 57; los que ya traen indicativo se dejan.
+            $cleanPhone = Telefono::paraEnvio($phone);
 
-            // Validaciones
-            if (empty($cleanPhone)) {
-                continue;
+            if ($cleanPhone !== null) {
+                $cleanPhones[] = $cleanPhone;
             }
-            if (strlen($cleanPhone) < 7 || strlen($cleanPhone) > 15) {
-                continue;
-            }
-
-            // Evitar números que sean solo ceros
-            if (preg_match('/^0+$/', $cleanPhone)) {
-                continue;
-            }
-
-            $cleanPhones[] = $cleanPhone;
         }
 
         // Eliminar duplicados y reindexar

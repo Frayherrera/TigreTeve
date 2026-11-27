@@ -127,7 +127,7 @@
                                 <div class="num-row-actions flex items-center justify-end gap-2">
                                     <button type="button" data-num-open="edit"
                                         data-num-id="{{ $item->id }}"
-                                        data-num-numero="{{ $item->numero }}"
+                                        data-num-numero="{{ \App\Support\Telefono::sinIndicativo($item->numero) }}"
                                         class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100">
                                         <i class="fas fa-pen"></i> Editar
                                     </button>
@@ -179,7 +179,7 @@
                         <div class="mt-3 flex items-center gap-2">
                             <button type="button" data-num-open="edit"
                                 data-num-id="{{ $item->id }}"
-                                data-num-numero="{{ $item->numero }}"
+                                data-num-numero="{{ \App\Support\Telefono::sinIndicativo($item->numero) }}"
                                 class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100">
                                 <i class="fas fa-pen"></i> Editar
                             </button>
@@ -215,14 +215,17 @@
                 @csrf
                 <div class="p-6">
                     <h2 id="num-create-title" class="text-lg font-semibold text-slate-800">Agregar número</h2>
-                    <p class="mt-1 text-sm text-slate-500">Incluye el indicativo del país, sin + ni espacios.</p>
+                    <p class="mt-1 text-sm text-slate-500">Escribe los 10 dígitos del celular; el 57 se agrega solo.</p>
 
                     <input type="hidden" name="_form" value="create">
-                    <label for="num-create-numero" class="block text-sm font-medium text-slate-700 mt-5 mb-1.5">Número</label>
-                    <input id="num-create-numero" name="numero" type="tel" inputmode="numeric"
-                        value="{{ old('_form') === 'create' ? old('numero') : '' }}"
-                        autocomplete="off" required placeholder="573001234567"
-                        class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-800 focus:border-[#3b7fa6] focus:ring-[#3b7fa6]">
+                    <label for="num-create-numero" class="block text-sm font-medium text-slate-700 mt-5 mb-1.5">Celular</label>
+                    <div class="flex">
+                        <span class="inline-flex items-center rounded-l-xl border border-r-0 border-slate-300 bg-slate-50 px-3 text-sm font-medium text-slate-500">+57</span>
+                        <input id="num-create-numero" name="numero" type="tel" inputmode="numeric"
+                            value="{{ old('_form') === 'create' ? old('numero') : '' }}"
+                            autocomplete="off" required placeholder="3001234567" maxlength="20"
+                            class="w-full min-w-0 rounded-r-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-800 focus:border-[#3b7fa6] focus:ring-[#3b7fa6]">
+                    </div>
                     @if (old('_form') === 'create')
                         @error('numero')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -253,14 +256,17 @@
                 @method('PUT')
                 <div class="p-6">
                     <h2 id="num-edit-title" class="text-lg font-semibold text-slate-800">Editar número</h2>
-                    <p class="mt-1 text-sm text-slate-500">Corrige el número o su indicativo.</p>
+                    <p class="mt-1 text-sm text-slate-500">Escribe los 10 dígitos del celular; el 57 se agrega solo.</p>
 
                     <input type="hidden" name="_form" value="edit">
-                    <label for="num-edit-numero" class="block text-sm font-medium text-slate-700 mt-5 mb-1.5">Número</label>
-                    <input id="num-edit-numero" name="numero" type="tel" inputmode="numeric"
-                        value="{{ old('_form') === 'edit' ? old('numero') : '' }}"
-                        autocomplete="off" required
-                        class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-800 focus:border-[#3b7fa6] focus:ring-[#3b7fa6]">
+                    <label for="num-edit-numero" class="block text-sm font-medium text-slate-700 mt-5 mb-1.5">Celular</label>
+                    <div class="flex">
+                        <span class="inline-flex items-center rounded-l-xl border border-r-0 border-slate-300 bg-slate-50 px-3 text-sm font-medium text-slate-500">+57</span>
+                        <input id="num-edit-numero" name="numero" type="tel" inputmode="numeric"
+                            value="{{ old('_form') === 'edit' ? old('numero') : '' }}"
+                            autocomplete="off" required placeholder="3001234567" maxlength="20"
+                            class="w-full min-w-0 rounded-r-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-800 focus:border-[#3b7fa6] focus:ring-[#3b7fa6]">
+                    </div>
                     @if (old('_form') === 'edit')
                         @error('numero')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -292,6 +298,7 @@
                     <h2 id="num-import-title" class="text-lg font-semibold text-slate-800">Importar desde CSV</h2>
                     <p class="mt-1 text-sm text-slate-500">
                         El archivo puede tener una columna con los números o varias; se limpian y se omiten los repetidos.
+                        A los celulares de 10 dígitos se les agrega el 57.
                     </p>
 
                     <input type="hidden" name="_form" value="import">

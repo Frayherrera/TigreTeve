@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Numero;
+use App\Support\Telefono;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -26,16 +27,7 @@ class NumeroController extends Controller
 
     public function store(Request $request)
     {
-        $numero = $this->normalize($request->input('numero'));
-
-        $request->merge(['numero' => $numero]);
-
-        $request->validate([
-            'numero' => ['required', 'string', 'regex:/^\d{7,15}$/', Rule::unique('numeros', 'numero')],
-        ], [
-            'numero.regex' => 'Ingresa un número válido de entre 7 y 15 dígitos (con indicativo, sin + ni espacios).',
-            'numero.unique' => 'Ese número ya está en la lista.',
-        ]);
+        $numero = $this->validarNumero($request);
 
         Numero::create(['numero' => $numero]);
 
@@ -44,16 +36,7 @@ class NumeroController extends Controller
 
     public function update(Request $request, Numero $numero)
     {
-        $nuevo = $this->normalize($request->input('numero'));
-
-        $request->merge(['numero' => $nuevo]);
-
-        $request->validate([
-            'numero' => ['required', 'string', 'regex:/^\d{7,15}$/', Rule::unique('numeros', 'numero')->ignore($numero->id)],
-        ], [
-            'numero.regex' => 'Ingresa un número válido de entre 7 y 15 dígitos (con indicativo, sin + ni espacios).',
-            'numero.unique' => 'Ese número ya está en la lista.',
-        ]);
+        $nuevo = $this->validarNumero($request, $numero);
 
         $numero->update(['numero' => $nuevo]);
 
@@ -87,9 +70,10 @@ class NumeroController extends Controller
 
         while (($row = fgetcsv($handle, 1000, ',')) !== false) {
             foreach ($row as $cell) {
-                $numero = $this->normalize($cell);
+                // Se agrega el 57 a los celulares de 10 dígitos.
+                $numero = Telefono::normalizar($cell);
 
-                if (! preg_match('/^\d{7,15}$/', $numero)) {
+                if ($numero === null) {
                     continue;
                 }
 
@@ -112,8 +96,32 @@ class NumeroController extends Controller
         return redirect()->route('numeros.index')->with('ok', $mensaje);
     }
 
-    private function normalize(?string $valor): string
+    /**
+     * Celular de 10 dígitos; el indicativo 57 se agrega solo. Devuelve el número listo para guardar.
+     */
+    private function validarNumero(Request $request, ?Numero $actual = null): string
     {
-        return preg_replace('/[^\d]/', '', (string) $valor);
+        $original = $request->input('numero');
+        $request->merge(['numero' => Telefono::normalizar($original) ?? '']);
+
+        $unico = Rule::unique('numeros', 'numero');
+        if ($actual) {
+            $unico->ignore($actual->id);
+        }
+
+        try {
+            $request->validate([
+                'numero' => ['required', $unico],
+            ], [
+                'numero.required' => 'Escribe los 10 dígitos del celular, sin el 57. Ej: 3001234567.',
+                'numero.unique' => 'Ese número ya está en la lista.',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Devuelve al formulario lo que la persona escribió, no el número normalizado.
+            $request->merge(['numero' => $original]);
+            throw $e;
+        }
+
+        return $request->input('numero');
     }
 }

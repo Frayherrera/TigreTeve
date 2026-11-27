@@ -6,6 +6,7 @@ use App\Jobs\EnviarPushNoticiaJob;
 use App\Models\Configuracion;
 use App\Models\Noticia;
 use App\Models\Numero;
+use App\Support\Telefono;
 use Illuminate\Support\Str;
 
 /**
@@ -52,8 +53,8 @@ class AvisosNoticia
         }
 
         $telefonos = Numero::pluck('numero')
-            ->map(fn ($n) => preg_replace('/\D/', '', $n))
-            ->filter(fn ($n) => strlen($n) >= 7 && strlen($n) <= 15)
+            ->map(fn ($n) => Telefono::paraEnvio($n))
+            ->filter()
             ->unique()
             ->values()
             ->all();
