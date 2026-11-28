@@ -99,18 +99,18 @@ class WhatsAppWebhookTest extends TestCase
         WhatsappLog::create(['phone' => '573001112233', 'status' => 'pending', 'batch_id' => 'B']);
         (new EnviarWhatsAppJob('573001112233', [
             'titulo' => "Título\ncon salto", 'cuerpo' => 'Cuerpo', 'image' => 'https://x.test/a.jpg',
-            'link' => 'https://www.facebook.com/pagina/posts/987', 'batch_id' => 'B',
+            'link' => 'https://noticias.tigreteve.online/noticias/mi-nota', 'batch_id' => 'B',
         ]))->handle();
 
         $log = WhatsappLog::where('batch_id', 'B')->first();
         $this->assertSame('sent', $log->status);
         $this->assertSame('wamid.NUEVO', $log->wamid);
-        Http::assertSent(fn ($r) => $r['template']['components'][2]['parameters'][0]['text'] === 'posts/987'
+        Http::assertSent(fn ($r) => $r['template']['components'][2]['parameters'][0]['text'] === 'mi-nota'
             && $r['template']['components'][1]['parameters'][1]['text'] === 'Título con salto');
 
-        // Link del sitio con la plantilla de Facebook: antes reventaba con "Undefined array key 5".
+        // Link que no es de una noticia (p. ej. de Facebook): queda fallido sin reventar.
         WhatsappLog::create(['phone' => '573001112244', 'status' => 'pending', 'batch_id' => 'C']);
-        (new EnviarWhatsAppJob('573001112244', ['titulo' => 't', 'cuerpo' => 'c', 'link' => 'https://tigreteve.com/noticias/slug', 'batch_id' => 'C']))->handle();
+        (new EnviarWhatsAppJob('573001112244', ['titulo' => 't', 'cuerpo' => 'c', 'link' => 'https://www.facebook.com/pagina/posts/987', 'batch_id' => 'C']))->handle();
         $this->assertSame('failed', WhatsappLog::where('batch_id', 'C')->value('status'));
     }
 

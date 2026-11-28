@@ -1027,8 +1027,11 @@
 
                             <div class="wa-field">
                                 <label for="image">Link de la imagen</label>
-                                <input type="url" class="wa-input" id="image" name="image" required
-                                    placeholder="https://ejemplo.com/imagen.jpg">
+                                <input type="url" class="wa-input @error('image') is-invalid @enderror" id="image" name="image" required
+                                    value="{{ old('image') }}" placeholder="https://ejemplo.com/imagen.jpg">
+                                <div class="wa-nt-status is-error" id="imageAviso" @if (! $errors->has('image')) hidden @endif>
+                                    @error('image'){{ $message }}@enderror
+                                </div>
                             </div>
 
                             <div class="wa-field">
@@ -1425,6 +1428,9 @@
                 elegida = n.id;
                 rellenar('titulo', n.titulo);
                 rellenar('image', n.image);
+                const aviso = document.getElementById('imageAviso');
+                aviso.textContent = n.image_aviso || '';
+                aviso.hidden = !n.image_aviso;
                 rellenar('link', n.link);
                 rellenar('cuerpo', n.cuerpo);
                 pintar();

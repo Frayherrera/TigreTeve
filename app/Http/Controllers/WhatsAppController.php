@@ -8,6 +8,7 @@ use App\Models\WhatsappLog;
 use App\Services\EnvioWhatsApp;
 use App\Support\Telefono;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 class WhatsAppController extends Controller
@@ -31,16 +32,25 @@ class WhatsAppController extends Controller
             ->limit(12)
             ->get();
 
-        return response()->json($noticias->map(fn (Noticia $n) => [
-            'id' => $n->id,
-            'titulo' => $n->titulo,
-            'miniatura' => $n->miniaturaUrl(),
-            'fecha' => $n->fechaPublicacion()->locale('es')->diffForHumans(),
-            // Campos del mensaje
-            'image' => $n->portadaUrl() ?? asset('img/logo.png'),
-            'link' => route('noticias.show2', $n->slug),
-            'cuerpo' => Str::limit(trim(preg_replace('/\s+/', ' ', $n->resumen ?: html_entity_decode(strip_tags((string) $n->cuerpo)))), 900),
-        ])->values());
+        return response()->json($noticias->map(function (Noticia $n) {
+            // WhatsApp no acepta WebP (ni otros formatos) en el encabezado: se usa el logo.
+            $extension = strtolower(pathinfo((string) $n->portada_path, PATHINFO_EXTENSION));
+            $portadaValida = $n->portada_path && in_array($extension, ['jpg', 'jpeg', 'png'], true);
+
+            return [
+                'id' => $n->id,
+                'titulo' => $n->titulo,
+                'miniatura' => $n->miniaturaUrl(),
+                'fecha' => $n->fechaPublicacion()->locale('es')->diffForHumans(),
+                // Campos del mensaje
+                'image' => $portadaValida ? $n->portadaUrl() : asset('img/logo.png'),
+                'image_aviso' => ($n->portada_path && ! $portadaValida)
+                    ? 'La portada es '.strtoupper($extension ?: 'de otro formato').' y WhatsApp solo acepta JPG o PNG; se usa el logo. Pega una URL JPG/PNG si quieres otra imagen.'
+                    : null,
+                'link' => route('noticias.show2', $n->slug),
+                'cuerpo' => Str::limit(trim(preg_replace('/\s+/', ' ', $n->resumen ?: html_entity_decode(strip_tags((string) $n->cuerpo)))), 900),
+            ];
+        })->values());
     }
 
     public function mensajeMasivo(Request $request, EnvioWhatsApp $envio)
@@ -53,6 +63,11 @@ class WhatsAppController extends Controller
         ], [
             'link.regex' => 'El link del botón debe ser una noticia de la web (…/noticias/slug).',
         ]);
+
+        // Meta rechaza el mensaje entero si la imagen del encabezado no es JPG/PNG pública de hasta 5 MB.
+        if ($errorImagen = $this->errorImagenWhatsApp($request->image)) {
+            return back()->withErrors(['image' => $errorImagen])->withInput();
+        }
 
         $phones = [];
 
@@ -143,6 +158,41 @@ class WhatsAppController extends Controller
         $creado = (clone $base)->min('created_at');
 
         return view('whatsapp.resultados', compact('batchId', 'conteos', 'estados', 'filtro', 'logs', 'creado'));
+    }
+
+    /**
+     * Null si la imagen sirve para el encabezado de la plantilla; si no, el motivo en español.
+     * WhatsApp solo acepta image/jpeg e image/png, públicas y de máximo 5 MB.
+     */
+    private function errorImagenWhatsApp(string $url): ?string
+    {
+        $base = 'WhatsApp solo acepta imágenes JPG o PNG públicas de hasta 5 MB';
+
+        try {
+            $respuesta = Http::timeout(10)->head($url);
+            // Algunos servidores no responden HEAD; se intenta con GET.
+            if (! $respuesta->successful()) {
+                $respuesta = Http::timeout(15)->get($url);
+            }
+        } catch (\Throwable $e) {
+            return "{$base}: no se pudo descargar la imagen.";
+        }
+
+        if (! $respuesta->successful()) {
+            return "{$base}: la imagen no es accesible (HTTP {$respuesta->status()}).";
+        }
+
+        $tipo = strtolower(trim(explode(';', (string) $respuesta->header('Content-Type'))[0]));
+        if (! in_array($tipo, ['image/jpeg', 'image/jpg', 'image/png'], true)) {
+            return "{$base} (esta es ".($tipo ?: 'de tipo desconocido').').';
+        }
+
+        $tamano = (int) $respuesta->header('Content-Length');
+        if ($tamano > 5 * 1024 * 1024) {
+            return "{$base} (esta pesa ".round($tamano / 1048576, 1).' MB).';
+        }
+
+        return null;
     }
 
     /**

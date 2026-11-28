@@ -150,7 +150,7 @@ class EnviarWhatsAppJob implements ShouldQueue
             return;
         }
 
-        $errorMessage = $json['error']['message'] ?? ($response->body() ?: 'Error desconocido');
+        $errorMessage = $this->mensajeDeError($json, $response->body());
 
         // Si el número no tiene WhatsApp
         if (stripos($errorMessage, 'Recipient phone number not found') !== false) {
@@ -177,6 +177,30 @@ class EnviarWhatsAppJob implements ShouldQueue
         $ruta = (string) parse_url($link, PHP_URL_PATH);
 
         return preg_match('#/noticias/([^/]+)/?$#', $ruta, $m) ? $m[1] : null;
+    }
+
+    /**
+     * "(#131053) Media upload error: Unsupported image type" en vez de solo el mensaje genérico,
+     * que casi nunca dice la causa. Meta pone el detalle en error.error_data.details.
+     */
+    private function mensajeDeError(?array $json, string $body): string
+    {
+        $error = $json['error'] ?? null;
+        if (! is_array($error)) {
+            return $body ?: 'Error desconocido';
+        }
+
+        $mensaje = (string) ($error['message'] ?? 'Error desconocido');
+        if (isset($error['code']) && ! str_contains($mensaje, '(#')) {
+            $mensaje = "(#{$error['code']}) {$mensaje}";
+        }
+
+        $detalle = $error['error_data']['details'] ?? null;
+        if (is_string($detalle) && $detalle !== '' && ! str_contains($mensaje, $detalle)) {
+            $mensaje .= ': '.$detalle;
+        }
+
+        return $mensaje;
     }
 
     private function guardarLog(array $datos): void

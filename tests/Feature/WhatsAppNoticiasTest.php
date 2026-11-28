@@ -101,4 +101,78 @@ class WhatsAppNoticiasTest extends TestCase
         });
         $this->assertDatabaseHas('whatsapp_logs', ['batch_id' => 'lote1', 'status' => 'sent']);
     }
+
+    private function enviarMasivo(string $imagen)
+    {
+        Numero::create(['numero' => '3001112233']);
+
+        return $this->actingAs($this->admin)->post(route('whatsapp.masivo'), [
+            'list_from_db' => '1',
+            'titulo' => 'T', 'cuerpo' => 'C', 'image' => $imagen,
+            'link' => 'https://noticias.tigreteve.online/noticias/alcalde-inaugura-puente',
+        ]);
+    }
+
+    public function test_el_envio_masivo_rechaza_imagenes_webp(): void
+    {
+        Queue::fake();
+        Http::fake(['img.test/*' => Http::response('', 200, ['Content-Type' => 'image/webp'])]);
+
+        $this->enviarMasivo('https://img.test/portada.webp')->assertSessionHasErrors('image');
+
+        Queue::assertNothingPushed();
+    }
+
+    public function test_el_envio_masivo_rechaza_imagenes_no_accesibles(): void
+    {
+        Queue::fake();
+        Http::fake(['img.test/*' => Http::response('', 403)]);
+
+        $this->enviarMasivo('https://img.test/privada.jpg')->assertSessionHasErrors('image');
+
+        Queue::assertNothingPushed();
+    }
+
+    public function test_el_envio_masivo_acepta_imagenes_jpg(): void
+    {
+        Queue::fake();
+        Http::fake(['img.test/*' => Http::response('', 200, ['Content-Type' => 'image/jpeg', 'Content-Length' => '120000'])]);
+
+        $this->enviarMasivo('https://img.test/portada.jpg')->assertSessionHasNoErrors();
+
+        Queue::assertPushed(EnviarWhatsAppJob::class, 1);
+    }
+
+    public function test_el_selector_usa_el_logo_si_la_portada_es_webp(): void
+    {
+        $this->noticia(['titulo' => 'Con webp', 'slug' => 'con-webp', 'portada_path' => 'imagenes/foto.webp']);
+
+        $r = $this->actingAs($this->admin)->getJson(route('whatsapp.noticias'))->assertOk();
+
+        $this->assertSame(asset('img/logo.png'), $r->json('0.image'));
+        $this->assertStringContainsString('WEBP', $r->json('0.image_aviso'));
+    }
+
+    public function test_el_log_guarda_el_codigo_y_el_detalle_del_error_de_meta(): void
+    {
+        Configuracion::create(['parametro' => 'idnumero', 'valor' => '111']);
+        Configuracion::create(['parametro' => 'tokenw', 'valor' => 'token']);
+        Http::fake(['graph.facebook.com/*' => Http::response(['error' => [
+            'message' => 'Media upload error',
+            'code' => 131053,
+            'error_data' => ['details' => 'Unsupported Image mime type image/webp'],
+        ]], 400)]);
+
+        (new EnviarWhatsAppJob('573001112233', [
+            'titulo' => 'T', 'cuerpo' => 'C', 'image' => 'https://x.test/a.webp',
+            'link' => 'https://noticias.tigreteve.online/noticias/x',
+            'batch_id' => 'lote2',
+        ]))->handle();
+
+        $this->assertDatabaseHas('whatsapp_logs', [
+            'batch_id' => 'lote2',
+            'status' => 'failed',
+            'error' => '(#131053) Media upload error: Unsupported Image mime type image/webp',
+        ]);
+    }
 }
